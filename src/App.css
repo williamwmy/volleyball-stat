@@ -414,6 +414,82 @@ h2 {
   margin-left: 16px;
 }
 
+.sett-navigasjon {
+  background: #f5f7fa;
+  border-radius: 2rem;
+  padding: 18px 20px 16px 20px;
+  margin: 16px auto 18px auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  justify-content: center;
+  box-shadow: 0 3px 12px #0002;
+  max-width: 700px;
+  min-width: 240px;
+}
+
+.sett-navigasjon > div {
+  font-size: 1.15rem;
+  color: #194e62;
+  font-weight: 600;
+  margin-right: 30px;
+  min-width: 100px;
+}
+
+.sett-ferdig-btn,
+.forrige-sett-btn,
+.neste-sett-btn {
+  background: #ffe066;
+  color: #194e62;
+  font-weight: 700;
+  font-size: 1.13rem;
+  border-radius: 17px;
+  padding: 13px 16px;
+  margin: 0 6px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.13s;
+  box-shadow: 0 2px 8px #ffe06644;
+  min-width: 100px;
+}
+.sett-ferdig-btn:hover,
+.forrige-sett-btn:hover,
+.neste-sett-btn:hover,
+.sett-ferdig-btn:focus,
+.forrige-sett-btn:focus,
+.neste-sett-btn:focus {
+  background: #ffecb3;
+  outline: none;
+}
+
+@media (max-width: 520px) {
+  .sett-navigasjon {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 13px 7px 13px 7px;
+    gap: 7px;
+    min-width: 0;
+  }
+  .sett-navigasjon > div {
+    margin-right: 0;
+    text-align: center;
+    margin-bottom: 9px;
+    font-size: 1.05rem;
+  }
+  .sett-ferdig-btn,
+  .forrige-sett-btn,
+  .neste-sett-btn {
+    font-size: 0.98rem;
+    padding: 10px 0;
+    margin: 0 0 4px 0;
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+
+
 .statistikk-spillernavn { font-weight: 700; }
 .statistikk-kategori { margin-left: 12px; }
 

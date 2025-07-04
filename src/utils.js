@@ -24,8 +24,12 @@ export function finnFørsteLedigePosisjon(aktive) {
 }
 
 // Hent og summer statistikk (brukes i App.jsx)
-export async function hentStatistikk(db) {
-  const stats = await db.statistikk.toArray();
+// Hvis settNr er satt, hentes kun statistikk for det settet
+export async function hentStatistikk(db, settNr = null) {
+  let stats = await db.statistikk.toArray();
+  if (typeof settNr === "number") {
+    stats = stats.filter(row => row.settNr === settNr);
+  }
   const spillereList = await db.spillere.toArray();
   const spillereMap = Object.fromEntries(spillereList.map(s => [s.id, s]));
   const oppsummert = {};
@@ -49,16 +53,17 @@ export function avg(arr) {
     : '-';
 }
 
+// Hvilken retning har brukeren dratt fingeren/musen
 export function getDirection(start, end) {
-    if (!start || !end) return null;
-    const dx = end.x - start.x;
-    const dy = end.y - start.y;
-    if (Math.abs(dx) > Math.abs(dy)) {
-      if (dx > 30) return 'right';
-      if (dx < -30) return 'left';
-    } else {
-      if (dy > 30) return 'down';
-      if (dy < -30) return 'up';
-    }
-    return null;
+  if (!start || !end) return null;
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  if (Math.abs(dx) > Math.abs(dy)) {
+    if (dx > 30) return 'right';
+    if (dx < -30) return 'left';
+  } else {
+    if (dy > 30) return 'down';
+    if (dy < -30) return 'up';
   }
+  return null;
+}
