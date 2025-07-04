@@ -1,0 +1,21 @@
+{
+    "name": "Volleyball Stat",
+    "short_name": "Volleyball",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#194e62",
+    "theme_color": "#194e62",
+    "icons": [
+      {
+        "src": "icon-512.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      },
+      {
+        "src": "icon-192.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      }
+    ]
+  }
+  
