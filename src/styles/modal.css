@@ -1,0 +1,85 @@
+.modal-bg {
+  position: fixed;
+  z-index: 999;
+  inset: 0;
+  background: rgba(10, 20, 40, 0.23);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 2vh;
+  overflow-y: auto;
+}
+
+.modal {
+  background: #fff;
+  color: #123;
+  border-radius: 16px;
+  padding: 1.2rem;
+  min-width: 240px;
+  max-height: 92vh;
+  overflow-y: auto;
+  margin-top: 0;
+  box-shadow: 0 8px 24px #0004;
+}
+
+.modal h2 {
+  font-size: 1.18em;
+  margin-bottom: 0.8em;
+}
+
+.admin-table,
+.spiller-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1rem;
+}
+.admin-table th,
+.admin-table td,
+.spiller-admin-table th,
+.spiller-admin-table td {
+  padding: 0.17em 0.38em;
+  line-height: 1.2;
+  height: 30px;
+}
+.admin-table tr,
+.spiller-admin-table tr {
+  background: #fff;
+  transition: background 0.14s;
+}
+.admin-table tr:hover,
+.spiller-admin-table tr:hover {
+  background: #f7f1ff;
+}
+.edit-btn,
+.delete-btn {
+  font-size: 0.89em;
+  padding: 0.13em 0.45em;
+  margin: 0 2px;
+  border-radius: 6px;
+}
+
+.swap-mode-btn.aktiv {
+  background: #f5f6fa;
+  font-weight: 700;
+}
+
+.stats-tab-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+  gap: 14px;
+}
+.tab-btn.aktiv {
+  font-weight: bold;
+  text-decoration: underline;
+}
+.lukk-btn {
+  margin-top: 10px;
+}
+
+
+
+
+
+
+

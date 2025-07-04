@@ -1,0 +1,49 @@
+.benk-container {
+  margin-top: 10px;
+  margin-bottom: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  justify-content: center;
+}
+
+.benk-tom {
+  color: #bbb;
+}
+
+.benk-spiller-chip {
+  background: #dde4ed;
+  border-radius: 14px;
+  color: #18435a;
+  padding: 0.23em 0.95em 0.23em 0.85em;
+  font-weight: 500;
+  font-size: 1.02em;
+  margin-right: 4px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 1px 4px #0001;
+}
+
+.benk-spiller-chip .swap-btn {
+  margin-left: 5px;
+  font-size: 1.17em;
+}
+
+.benk-spiller-chip .swap-btn:active {
+  background: #ffecb3;
+}
+
+.onsket-inn-varsel {
+  color: #ff9500;
+  background: #fffbe5;
+  padding: 0.7em 1.3em;
+  margin-bottom: 10px;
+  border-radius: 13px;
+  font-weight: 600;
+  font-size: 1.05em;
+  text-align: center;
+}
+
+.onsket-inn-avbryt {
+  margin-left: 16px;
+}

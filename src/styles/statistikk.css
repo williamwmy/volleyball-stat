@@ -1,0 +1,18 @@
+/* Statistikk-linje nederst */
+.statistikk-spillernavn {
+  font-weight: 700;
+  font-size: 0.99em;
+}
+.statistikk-kategori {
+  margin-left: 8px;
+  font-size: 0.94em;
+}
+
+/* Farger for navn på statistikk nederst */
+.farge0 { color: #ff9500; }
+.farge1 { color: #5fd6ff; }
+.farge2 { color: #cabfff; }
+.farge3 { color: #a5ffe3; }
+.farge4 { color: #ffe066; }
+.farge5 { color: #d0ffc5; }
+.farge6 { color: #ffecb3; }

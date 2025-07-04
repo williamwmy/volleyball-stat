@@ -1,0 +1,47 @@
+.swap-mode {
+  border: 2.2px dashed #ffe066;
+  cursor: pointer;
+}
+.swap-selected {
+  box-shadow: 0 0 0 5px #ff950033;
+}
+.swap-indikator {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 1.2rem;
+  color: #ffe066;
+  font-weight: 700;
+}
+.swap-indikator.valgt {
+  color: #ff9500;
+}
+
+/* Kompakt swap-btn, samme stil på grid og benk */
+.swap-btn {
+  background: #ffe066;
+  color: #194e62;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.28em;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 5px;
+  padding: 0.13em 0.49em;
+  min-width: 38px;
+  min-height: 38px;
+  width: 38px;
+  height: 38px;
+  box-shadow: 0 1px 7px #0002;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.13s;
+}
+.swap-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.swap-btn:active {
+  background: #ffecb3;
+}
