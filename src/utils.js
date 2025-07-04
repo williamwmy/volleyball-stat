@@ -15,9 +15,7 @@ export const spillerFarger = [
 
 // --- FUNKSJONER ---
 
-/**
- * Finn første ledige posisjon (0–6) blant aktive spillere
- */
+// Finn første ledige posisjon (0–6) blant aktive spillere
 export function finnFørsteLedigePosisjon(aktive) {
   for (let i = 0; i < 7; i++) {
     if (!aktive.some(s => s.posisjon === i)) return i;
@@ -25,10 +23,7 @@ export function finnFørsteLedigePosisjon(aktive) {
   return null;
 }
 
-/**
- * Hent statistikk og lag et oppsummert statistikk-objekt
- * Returnerer et objekt hvor spillerId er nøkkel, og per-type arrays
- */
+// Hent og summer statistikk (brukes i App.jsx)
 export async function hentStatistikk(db) {
   const stats = await db.statistikk.toArray();
   const spillereList = await db.spillere.toArray();
@@ -47,9 +42,7 @@ export async function hentStatistikk(db) {
   return oppsummert;
 }
 
-/**
- * Kalkuler snitt av array, returnerer string med 2 desimaler eller '-'
- */
+// Kalkuler snitt av en array (med 2 desimaler), eller '-'
 export function avg(arr) {
   return arr && arr.length
     ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2)
