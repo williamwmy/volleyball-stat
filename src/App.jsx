@@ -301,6 +301,7 @@ export default function App() {
   const [statsTab, setStatsTab] = useState(0);
   const [swapMode, setSwapMode] = useState(false);
   const [swapFirstIdx, setSwapFirstIdx] = useState(null);
+  const [ønsketInn, setØnsketInn] = useState(null);
 
   useEffect(() => {
     db.spillere.toArray().then(setSpillere);
@@ -328,6 +329,23 @@ export default function App() {
 
   // --- SPILLER AKTIVITET ---
 
+  // Legg til spiller fra modal (automatisk ledig posisjon)
+  async function leggTilSpillerFraModal() {
+    const navn = prompt('Navn på spiller?');
+    const nummer = prompt('Draktnummer?');
+    if (!navn || !nummer) return;
+    const alleSpillere = await db.spillere.toArray();
+    const aktive = alleSpillere.filter(s => s.active === true);
+    let posisjon = finnFørsteLedigePosisjon(aktive);
+    let active = posisjon !== null;
+    if (!active) {
+      const antallInactive = alleSpillere.filter(s => s.active === false).length;
+      posisjon = aktive.length + antallInactive;
+    }
+    await db.spillere.add({ navn, nummer, posisjon, active });
+    setSpillere(await db.spillere.toArray());
+  }
+
   // Legg til spiller på valgt posisjon (fra pluss-knapp)
   async function leggTilSpillerPåPosisjon(posisjon) {
     const navn = prompt('Navn på spiller?');
@@ -336,20 +354,6 @@ export default function App() {
       await db.spillere.add({ navn, nummer, posisjon, active: true });
       setSpillere(await db.spillere.toArray());
     }
-  }
-
-  // Legg til spiller fra modal (automatisk ledig posisjon)
-  async function leggTilSpillerFraModal() {
-    const navn = prompt('Navn på spiller?');
-    const nummer = prompt('Draktnummer?');
-    if (!navn || !nummer) return;
-    const alle = await db.spillere.toArray();
-    const aktive = alle.filter(s => s.active === true);
-    let posisjon = finnFørsteLedigePosisjon(aktive);
-    let active = posisjon !== null;
-    if (!active) posisjon = aktive.length + (await db.spillere.where('active').equals(false).count());
-    await db.spillere.add({ navn, nummer, posisjon, active });
-    setSpillere(await db.spillere.toArray());
   }
 
   async function slettAlleSpillere() {
@@ -405,8 +409,48 @@ export default function App() {
     }
   }
 
+  // Bytt inn spiller fra benk
+  async function byttInnSpiller(benkespiller) {
+    const aktive = spillere.filter(s => s.active);
+    const ledigPos = finnFørsteLedigePosisjon(aktive);
+    if (ledigPos !== null) {
+      // Ledig plass: bare sett aktiv og gi posisjon
+      await db.spillere.update(benkespiller.id, { active: true, posisjon: ledigPos });
+      setSpillere(await db.spillere.toArray());
+    } else {
+      // Ikke ledig: be bruker velge hvem som skal ut
+      setØnsketInn(benkespiller);
+    }
+  }
+
+  // Bytt ut en aktiv spiller med benkespiller
+  async function byttUtOgInn(utSpiller, innSpiller) {
+    // Finn posisjon for utSpiller, og første ledige benk-posisjon for ut-spiller
+    const benk = spillere.filter(s => !s.active && s.id !== innSpiller.id);
+    const nyBenkPos = (benk.length > 0 ? Math.max(...benk.map(s => s.posisjon ?? 0)) + 1 : 0);
+    await db.spillere.update(innSpiller.id, { active: true, posisjon: utSpiller.posisjon });
+    await db.spillere.update(utSpiller.id, { active: false, posisjon: nyBenkPos });
+    setSpillere(await db.spillere.toArray());
+    setØnsketInn(null);
+  }
+
   return (
     <div className="app-main">
+      {ønsketInn && (
+        <div style={{
+          color: '#ff9500',
+          background: '#fffbe5',
+          padding: '0.7em 1.3em',
+          marginBottom: 10,
+          borderRadius: 13,
+          fontWeight: 600,
+          fontSize: '1.05em',
+          textAlign: 'center'
+        }}>
+          Klikk på spilleren du vil bytte ut for å sette inn <b>{ønsketInn.navn}</b>!
+          <button style={{ marginLeft: 12, fontWeight: 400 }} onClick={() => setØnsketInn(null)}>Avbryt</button>
+        </div>
+      )}
       <div className="grid-container">
         {ruter.map((spiller, idx) =>
           spiller ? (
@@ -415,17 +459,20 @@ export default function App() {
               spiller={spiller}
               onScore={onScore}
               idx={idx}
-              swapMode={swapMode}
-              onSwap={() => handleSwapClick(idx)}
+              swapMode={swapMode || ønsketInn !== null}
+              onSwap={() => {
+                if (swapMode) handleSwapClick(idx);
+                else if (ønsketInn) byttUtOgInn(spiller, ønsketInn);
+              }}
               selectedForSwap={swapMode && swapFirstIdx === idx}
             />
           ) : (
             <div
               className="spiller-rute tom"
               key={`tom-${idx}`}
-              onClick={swapMode ? undefined : () => leggTilSpillerPåPosisjon(idx)}
+              onClick={swapMode || ønsketInn ? undefined : () => leggTilSpillerPåPosisjon(idx)}
               style={{
-                cursor: swapMode ? "not-allowed" : "pointer",
+                cursor: swapMode || ønsketInn ? "not-allowed" : "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -455,6 +502,28 @@ export default function App() {
           <div style={{ fontSize: 48, textAlign: 'center' }}>⚙️</div>
           <div style={{ textAlign: 'center', marginTop: 8 }}>Innstillinger</div>
         </div>
+      </div>
+
+      {/* BENKEN */}
+      <div className="benk-container">
+        {spillere.filter(s => !s.active).length === 0 && (
+          <div style={{ color: "#bbb" }}>Ingen på benken</div>
+        )}
+        {spillere
+          .filter(s => !s.active)
+          .sort((a, b) => (a.posisjon ?? 0) - (b.posisjon ?? 0))
+          .map((spiller, idx) => (
+            <div className="benk-spiller-chip" key={spiller.id}>
+              #{spiller.nummer} {spiller.navn}
+              <button
+                className="swap-btn"
+                onClick={() => byttInnSpiller(spiller)}
+                disabled={!!ønsketInn}
+              >
+                Bytt inn
+              </button>
+            </div>
+          ))}
       </div>
 
       {/* --- MODAL: INNSTILLINGER --- */}
