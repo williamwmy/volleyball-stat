@@ -1,52 +1,32 @@
+// App.jsx
+
 import React, { useState, useEffect } from 'react';
 import { db } from './db';
 import './App.css';
 import SpillerRute from './components/SpillerRute';
-import { finnFørsteLedigePosisjon } from './utils';
-
-const kategoriLabels = ['Serve', 'Pass', 'Attack'];
-const spillerFarger = [
-  { navn: '#ff9500', knapp: '#fffbe5' },
-  { navn: '#5fd6ff', knapp: '#e6fbff' },
-  { navn: '#cabfff', knapp: '#f7f1ff' },
-  { navn: '#a5ffe3', knapp: '#edfff8' },
-  { navn: '#ffe066', knapp: '#fffbe5' },
-  { navn: '#d0ffc5', knapp: '#f5fff2' },
-  { navn: '#ffecb3', knapp: '#fff8e1' },
-];
+import { kategoriLabels, spillerFarger, finnFørsteLedigePosisjon, hentStatistikk, avg } from './utils';
 
 export default function App() {
   const [spillere, setSpillere] = useState([]);
   const [statistikk, setStatistikk] = useState({});
   const [showSettings, setShowSettings] = useState(false);
   const [showStatsTable, setShowStatsTable] = useState(false);
+  const [showSpillerAdmin, setShowSpillerAdmin] = useState(false);
+  const [redigerSpillerData, setRedigerSpillerData] = useState(null);
   const [statsTab, setStatsTab] = useState(0);
   const [swapMode, setSwapMode] = useState(false);
   const [swapFirstIdx, setSwapFirstIdx] = useState(null);
   const [ønsketInn, setØnsketInn] = useState(null);
 
+  // Last inn spillere og statistikk
   useEffect(() => {
     db.spillere.toArray().then(setSpillere);
-    hentStatistikk();
+    hentStatistikkFraDB();
     // eslint-disable-next-line
   }, []);
 
-  async function hentStatistikk() {
-    const stats = await db.statistikk.toArray();
-    const spillereList = await db.spillere.toArray();
-    const spillereMap = Object.fromEntries(spillereList.map(s => [s.id, s]));
-    const oppsummert = {};
-    stats.forEach(({ spillerId, type, score }) => {
-      if (!oppsummert[spillerId]) oppsummert[spillerId] = {};
-      if (!oppsummert[spillerId][type]) oppsummert[spillerId][type] = [];
-      oppsummert[spillerId][type].push(score);
-    });
-    oppsummert.__logg = stats.map(row => ({
-      ...row,
-      navn: spillereMap[row.spillerId]?.navn || "",
-      nummer: spillereMap[row.spillerId]?.nummer || "",
-    }));
-    setStatistikk(oppsummert);
+  async function hentStatistikkFraDB() {
+    setStatistikk(await hentStatistikk(db));
   }
 
   async function leggTilSpillerFraModal() {
@@ -81,8 +61,7 @@ export default function App() {
     setStatistikk({});
   }
 
-  // NY: Slett bare statistikk
-  async function slettStatistikk() {
+  async function resetStatistikk() {
     await db.statistikk.clear();
     setStatistikk({});
   }
@@ -94,7 +73,7 @@ export default function App() {
       score,
       tidspunkt: new Date()
     });
-    hentStatistikk();
+    hentStatistikkFraDB();
   }
 
   // SWAP LOGIKK
@@ -103,7 +82,6 @@ export default function App() {
     .sort((a, b) => (a.posisjon ?? 0) - (b.posisjon ?? 0))
     .slice(0, 7);
 
-  // Fyll ut til 7 ruter
   const ruter = [];
   for (let i = 0; i < 7; i++) {
     const spiller = aktiveSpillere.find(s => s.posisjon === i);
@@ -114,6 +92,7 @@ export default function App() {
     setSwapMode(!swapMode);
     setSwapFirstIdx(null);
   }
+
   async function handleSwapClick(idx) {
     if (!swapMode || !ruter[idx]) return;
     if (swapFirstIdx === null) {
@@ -149,6 +128,40 @@ export default function App() {
     await db.spillere.update(utSpiller.id, { active: false, posisjon: nyBenkPos });
     setSpillere(await db.spillere.toArray());
     setØnsketInn(null);
+  }
+
+  // --- NYE: ADMINISTRASJON FUNKSJONER ---
+
+  // Slett en enkelt spiller
+  async function slettSpiller(spiller) {
+    if (window.confirm(`Slett spiller "${spiller.navn}"? Denne handlingen kan ikke angres.`)) {
+      await db.spillere.delete(spiller.id);
+      await db.statistikk.where({ spillerId: spiller.id }).delete();
+      setSpillere(await db.spillere.toArray());
+      hentStatistikkFraDB();
+    }
+  }
+
+  // Åpne redigering
+  function redigerSpiller(spiller) {
+    setRedigerSpillerData(spiller);
+  }
+
+  // Lagre endringer etter redigering
+  async function lagreSpillerEndring(e) {
+    e.preventDefault();
+    const { id } = redigerSpillerData;
+    const navn = e.target.navn.value;
+    const nummer = e.target.nummer.value;
+    if (!navn || !nummer) return;
+    await db.spillere.update(id, { navn, nummer });
+    setRedigerSpillerData(null);
+    setSpillere(await db.spillere.toArray());
+  }
+
+  // Avbryt redigering
+  function avbrytRedigering() {
+    setRedigerSpillerData(null);
   }
 
   return (
@@ -217,16 +230,77 @@ export default function App() {
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h2>Innstillinger</h2>
             <button onClick={leggTilSpillerFraModal}>Legg til spiller</button>
-            <button onClick={slettStatistikk}>Nullstill all statistikk</button>
-            <button onClick={slettAlleSpillere}>Slett alle spillere/statistikk</button>
+            <button onClick={slettAlleSpillere}>Slett alle spillere og statistikk</button>
+            <button onClick={resetStatistikk}>Nullstill statistikk (behold spillere)</button>
             <button onClick={() => setShowStatsTable(true)}>Vis statistikk</button>
-            <button
-              className={`swap-mode-btn${swapMode ? " aktiv" : ""}`}
-              onClick={handleSwapMode}
-            >
+            <button className={`swap-mode-btn${swapMode ? " aktiv" : ""}`} onClick={handleSwapMode}>
               {swapMode ? "Avslutt bytt posisjon" : "Bytt posisjon på spillere"}
             </button>
+            <button onClick={() => setShowSpillerAdmin(true)}>
+              Administrer spillere
+            </button>
             <button onClick={() => setShowSettings(false)}>Lukk</button>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL: SPILLERADMINISTRASJON --- */}
+      {showSpillerAdmin && (
+        <div className="modal-bg" onClick={() => setShowSpillerAdmin(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h2>Administrer spillere</h2>
+            <table className="spiller-admin-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Navn</th>
+                  <th>Draktnummer</th>
+                  <th>Handlinger</th>
+                </tr>
+              </thead>
+              <tbody>
+                {spillere.map(spiller => (
+                  <tr key={spiller.id}>
+                    <td>{spiller.nummer}</td>
+                    <td>{spiller.navn}</td>
+                    <td>{spiller.nummer}</td>
+                    <td>
+                      <button className="edit-btn" onClick={() => redigerSpiller(spiller)}>Rediger</button>
+                      <button className="delete-btn" onClick={() => slettSpiller(spiller)}>Slett</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {/* Kanskje legg inn Lukk-knapp også */}
+            <button onClick={() => setShowSpillerAdmin(false)}>Lukk</button>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL: REDIGER SPILLER --- */}
+      {redigerSpillerData && (
+        <div className="modal-bg" onClick={avbrytRedigering}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h2>Rediger spiller</h2>
+            <form onSubmit={lagreSpillerEndring}>
+              <div>
+                <label>
+                  Navn:{" "}
+                  <input name="navn" defaultValue={redigerSpillerData.navn} required />
+                </label>
+              </div>
+              <div>
+                <label>
+                  Nummer:{" "}
+                  <input name="nummer" defaultValue={redigerSpillerData.nummer} required />
+                </label>
+              </div>
+              <div style={{ marginTop: 12 }}>
+                <button type="submit">Lagre</button>
+                <button type="button" style={{ marginLeft: 8 }} onClick={avbrytRedigering}>Avbryt</button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -271,11 +345,6 @@ export default function App() {
                   )}
                   {spillere.map((spiller, idx) => {
                     const stats = statistikk[spiller.id] || {};
-                    function avg(arr) {
-                      return arr && arr.length
-                        ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2)
-                        : '-';
-                    }
                     return (
                       <tr key={spiller.id}>
                         <td>{spiller.nummer}</td>

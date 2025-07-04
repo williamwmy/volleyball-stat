@@ -244,7 +244,8 @@ body {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 6vh;
+  padding-top: 2vh; 
+  overflow-y: auto;  
 }
 
 .modal {
@@ -253,10 +254,10 @@ body {
   border-radius: 16px;
   padding: 2rem;
   min-width: 240px;
+  max-height: 92vh;     
+  overflow-y: auto;    
+  margin-top: 0;       
   box-shadow: 0 8px 24px #0004;
-  max-height: 96vh;
-  overflow-y: auto;
-  margin-top: 8vh;
 }
 .modal table {
   font-size: 1.05rem;
@@ -268,6 +269,36 @@ body {
 .modal th {
   background: #f6e7c0;
   color: #194e62;
+}
+
+.spiller-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1rem;
+}
+
+.spiller-admin-table th,
+.spiller-admin-table td {
+  padding: 0.22em 0.5em;     /* Mindre padding! */
+  line-height: 1.2;          /* Tighter */
+  height: 32px;              /* Setter min høyde lavere */
+}
+
+.spiller-admin-table tr {
+  background: #fff;
+  transition: background 0.14s;
+}
+
+.spiller-admin-table tr:hover {
+  background: #f7f1ff;
+}
+
+.spiller-admin-table .edit-btn,
+.spiller-admin-table .delete-btn {
+  font-size: 0.9em;
+  padding: 0.13em 0.7em;
+  margin: 0 2px;
+  border-radius: 6px;
 }
 
 button {
@@ -426,4 +457,5 @@ h2 {
     padding: 1rem 0.5rem;
     max-height: 96vh;
   }
+  
 }
