@@ -51,11 +51,9 @@ body {
   border: 2.2px dashed #ffe066;
   cursor: pointer;
 }
-
 .swap-selected {
   box-shadow: 0 0 0 5px #ff950033;
 }
-
 .swap-indikator {
   position: absolute;
   top: 12px;
@@ -77,7 +75,7 @@ body {
   font-size: 1.15rem;
 }
 .innstillinger-ikon {
-  font-size: 48px;
+  font-size: 2.4em;
   text-align: center;
 }
 .innstillinger-label {
@@ -146,7 +144,6 @@ body {
   height: 160px;
   position: relative;
 }
-
 .simple-y-btn {
   width: 62px;
   height: 62px;
@@ -171,19 +168,17 @@ body {
   justify-content: center;
   touch-action: none;
 }
-
 .simple-y-btn.top {
   margin-top: 1.5rem;
   margin-bottom: 0.85rem;
 }
-
 .simple-y-bottom {
   width: 100%;
   display: flex;
   flex-direction: row;
-  justify-content: center;     
-  gap: 24px;                   
-  margin-left: 8px;            
+  justify-content: center;
+  gap: 24px;
+  margin-left: 8px;
   margin-right: 8px;
 }
 
@@ -244,68 +239,54 @@ body {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 2vh; 
-  overflow-y: auto;  
+  padding-top: 2vh;
+  overflow-y: auto;
 }
 
 .modal {
   background: #fff;
   color: #123;
   border-radius: 16px;
-  padding: 2rem;
+  padding: 1.2rem;
   min-width: 240px;
-  max-height: 92vh;     
-  overflow-y: auto;    
-  margin-top: 0;       
+  max-height: 92vh;
+  overflow-y: auto;
+  margin-top: 0;
   box-shadow: 0 8px 24px #0004;
 }
 
-.modal h3 {
-  font-size: 1.07em;
-  color: #246c8e;
-  margin: 15px 0 8px 0;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+.modal h2 {
+  font-size: 1.18em;
+  margin-bottom: 0.8em;
 }
 
-.modal table {
-  font-size: 1.05rem;
-}
-.modal th, .modal td {
-  padding: 0.18em 0.3em;
-  border-bottom: 1px solid #e3e4e7;
-}
-.modal th {
-  background: #f6e7c0;
-  color: #194e62;
-}
-
+.admin-table,
 .spiller-admin-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 1rem;
 }
-
+.admin-table th,
+.admin-table td,
 .spiller-admin-table th,
 .spiller-admin-table td {
-  padding: 0.22em 0.5em;     /* Mindre padding! */
-  line-height: 1.2;          /* Tighter */
-  height: 32px;              /* Setter min høyde lavere */
+  padding: 0.17em 0.38em;
+  line-height: 1.2;
+  height: 30px;
 }
-
+.admin-table tr,
 .spiller-admin-table tr {
   background: #fff;
   transition: background 0.14s;
 }
-
+.admin-table tr:hover,
 .spiller-admin-table tr:hover {
   background: #f7f1ff;
 }
-
-.spiller-admin-table .edit-btn,
-.spiller-admin-table .delete-btn {
-  font-size: 0.9em;
-  padding: 0.13em 0.7em;
+.edit-btn,
+.delete-btn {
+  font-size: 0.89em;
+  padding: 0.13em 0.45em;
   margin: 0 2px;
   border-radius: 6px;
 }
@@ -331,6 +312,7 @@ button:hover, button:focus {
   background: #f5f6fa;
   font-weight: 700;
 }
+
 .stats-tab-row {
   display: flex;
   justify-content: center;
@@ -348,11 +330,11 @@ button:hover, button:focus {
 .statistikk-tabell {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 1.4rem;
-  font-size: 1.06rem;
+  margin-bottom: 1.1rem;
+  font-size: 1.02rem;
 }
 .statistikk-tabell th, .statistikk-tabell td {
-  padding: 0.18em 0.3em;
+  padding: 0.13em 0.28em;
   border-bottom: 1px solid #e3e4e7;
 }
 .statistikk-tabell th {
@@ -366,8 +348,37 @@ button:hover, button:focus {
 
 h2 {
   color: #194e62;
-  font-size: 1.35rem;
-  margin-bottom: 1.2rem;
+  font-size: 1.21rem;
+  margin-bottom: 1.1rem;
+}
+
+/* Kompakt swap-btn, samme stil på grid og benk */
+.swap-btn {
+  background: #ffe066;
+  color: #194e62;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.28em;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 5px;
+  padding: 0.13em 0.49em;
+  min-width: 38px;
+  min-height: 38px;
+  width: 38px;
+  height: 38px;
+  box-shadow: 0 1px 7px #0002;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.13s;
+}
+.swap-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.swap-btn:active {
+  background: #ffecb3;
 }
 
 .benk-container {
@@ -375,7 +386,7 @@ h2 {
   margin-bottom: 6px;
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 9px;
   justify-content: center;
 }
 .benk-tom {
@@ -385,25 +396,17 @@ h2 {
   background: #dde4ed;
   border-radius: 14px;
   color: #18435a;
-  padding: 0.32em 1.13em 0.32em 0.95em;
+  padding: 0.23em 0.95em 0.23em 0.85em;
   font-weight: 500;
-  font-size: 1.05em;
+  font-size: 1.02em;
   margin-right: 4px;
   display: flex;
   align-items: center;
   box-shadow: 0 1px 4px #0001;
 }
 .benk-spiller-chip .swap-btn {
-  background: #ffe066;
-  color: #18435a;
-  font-weight: 700;
+  margin-left: 5px;
   font-size: 1.17em;
-  border: none;
-  border-radius: 7px;
-  margin-left: 7px;
-  cursor: pointer;
-  padding: 0.19em 0.77em;
-  box-shadow: 0 1px 7px #0002;
 }
 .benk-spiller-chip .swap-btn:active {
   background: #ffecb3;
@@ -423,95 +426,50 @@ h2 {
   margin-left: 16px;
 }
 
+/* Kompakt sett-navigasjon under benk */
 .sett-navigasjon {
-  background: #f5f7fa;
-  border-radius: 2rem;
-  padding: 18px 20px 16px 20px;
-  margin: 16px auto 18px auto;
   display: flex;
-  flex-direction: row;
   align-items: center;
-  gap: 16px;
   justify-content: center;
-  box-shadow: 0 3px 12px #0002;
-  max-width: 700px;
-  min-width: 240px;
+  font-size: 1rem;
+  margin: 5px 0 9px 0;
+  gap: 0.10em;
 }
-
 .sett-navigasjon > div {
-  font-size: 1.15rem;
-  color: #194e62;
-  font-weight: 600;
-  margin-right: 30px;
-  min-width: 100px;
+  font-size: 1em;
+  margin-right: 0.65em;
 }
-
-.sett-ferdig-btn,
-.forrige-sett-btn,
-.neste-sett-btn {
+.sett-arrow {
+  background: #e7ecf7;
+  color: #194e62;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.02em;
+  font-weight: 700;
+  padding: 0.08em 0.75em;
+  cursor: pointer;
+  transition: background 0.13s;
+}
+.sett-arrow:disabled {
+  opacity: 0.32;
+  cursor: not-allowed;
+}
+.sett-ferdig-mini {
   background: #ffe066;
   color: #194e62;
-  font-weight: 700;
-  font-size: 1.13rem;
-  border-radius: 17px;
-  padding: 13px 16px;
-  margin: 0 6px;
   border: none;
+  border-radius: 7px;
+  font-size: 1em;
+  font-weight: 700;
+  padding: 0.12em 0.85em;
+  margin-left: 0.6em;
   cursor: pointer;
-  transition: background 0.15s, box-shadow 0.13s;
-  box-shadow: 0 2px 8px #ffe06644;
-  min-width: 100px;
 }
-.sett-ferdig-btn:hover,
-.forrige-sett-btn:hover,
-.neste-sett-btn:hover,
-.sett-ferdig-btn:focus,
-.forrige-sett-btn:focus,
-.neste-sett-btn:focus {
-  background: #ffecb3;
-  outline: none;
+.sett-ferdig-mini:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
-@media (max-width: 520px) {
-  .sett-navigasjon {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 13px 7px 13px 7px;
-    gap: 7px;
-    min-width: 0;
-  }
-  .sett-navigasjon > div {
-    margin-right: 0;
-    text-align: center;
-    margin-bottom: 9px;
-    font-size: 1.05rem;
-  }
-  .sett-ferdig-btn,
-  .forrige-sett-btn,
-  .neste-sett-btn {
-    font-size: 0.98rem;
-    padding: 10px 0;
-    margin: 0 0 4px 0;
-    min-width: 0;
-    width: 100%;
-  }
-}
-
-
-
-.statistikk-spillernavn { font-weight: 700; }
-.statistikk-kategori { margin-left: 12px; }
-
-/* Farger for navn på statistikk nederst */
-.farge0 { color: #ff9500; }
-.farge1 { color: #5fd6ff; }
-.farge2 { color: #cabfff; }
-.farge3 { color: #a5ffe3; }
-.farge4 { color: #ffe066; }
-.farge5 { color: #d0ffc5; }
-.farge6 { color: #ffecb3; }
-
-/* --------- Mobilvennlig --------- */
 @media (max-width: 540px) {
   .app-main {
     padding: 0.1rem 8px 0.7rem 8px;
@@ -525,22 +483,52 @@ h2 {
     min-width: 0;
     min-height: 105px;
     font-size: 1rem;
-    padding: 0.28rem 0.13rem 0.1rem 0.13rem;
+    padding: 0.18rem 0.13rem 0.08rem 0.13rem;
     padding-left: 7px;
     padding-right: 7px;
   }
   .simple-y-btn {
-    width: 56px;
-    height: 56px;
-    min-width: 56px;
-    min-height: 56px;
-    max-width: 56px;
-    max-height: 56px;
-    font-size: 1rem;
+    width: 50px;
+    height: 50px;
+    min-width: 50px;
+    min-height: 50px;
+    max-width: 50px;
+    max-height: 50px;
+    font-size: 0.95rem;
   }
   .modal {
-    padding: 1rem 0.5rem;
-    max-height: 96vh;
+    padding: 0.7rem 0.3rem;
+    max-height: 97vh;
   }
-  
+  .benk-spiller-chip {
+    font-size: 0.92em;
+    padding: 0.17em 0.7em 0.17em 0.62em;
+  }
+  .swap-btn {
+    font-size: 1em;
+    min-width: 30px;
+    min-height: 30px;
+    width: 30px;
+    height: 30px;
+    padding: 0.07em 0.17em;
+  }
 }
+
+/* Statistikk-linje nederst */
+.statistikk-spillernavn {
+  font-weight: 700;
+  font-size: 0.99em;
+}
+.statistikk-kategori {
+  margin-left: 8px;
+  font-size: 0.94em;
+}
+
+/* Farger for navn på statistikk nederst */
+.farge0 { color: #ff9500; }
+.farge1 { color: #5fd6ff; }
+.farge2 { color: #cabfff; }
+.farge3 { color: #a5ffe3; }
+.farge4 { color: #ffe066; }
+.farge5 { color: #d0ffc5; }
+.farge6 { color: #ffecb3; }

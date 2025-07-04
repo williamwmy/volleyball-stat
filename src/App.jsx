@@ -25,13 +25,21 @@ export default function App() {
   }, []);
 
   async function loadStatistikk() {
+    // Finn høyeste settNr brukt, slik at reload fungerer også etter reload med flere sett
+    let maxSettNr = 0;
+    const alleStats = await db.statistikk.toArray();
+    if (alleStats.length > 0) {
+      maxSettNr = Math.max(...alleStats.map(row => row.settNr ?? 0));
+    }
     const perSett = [];
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i <= maxSettNr; i++) {
       // For hvert sett: stats fra statistikk-tabellen hvor settNr = i
       const stats = await hentStatistikk(db, i);
       perSett[i] = stats;
     }
-    setStatistikkPerSett(perSett);
+    // Hvis det ikke finnes noen sett, start med ett
+    setStatistikkPerSett(perSett.length === 0 ? [{}] : perSett);
+    settSettNr(0);
   }
 
   // ---- LEGG TIL/REDIGER/SLETT SPILLER ----
@@ -67,7 +75,7 @@ export default function App() {
   }
   async function resetAlleStatistikk() {
     await db.statistikk.clear();
-    await loadStatistikk();
+    setStatistikkPerSett([{}]);
     settSettNr(0);
   }
   async function redigerSpiller(spiller) {
@@ -249,8 +257,16 @@ export default function App() {
                 className="swap-btn"
                 onClick={() => byttInnSpiller(spiller)}
                 disabled={!!ønsketInn}
+                title="Bytt inn spiller"
+                style={{
+                  fontSize: "1.35em",
+                  padding: "0.15em 0.55em",
+                  borderRadius: "50%",
+                  marginLeft: "8px",
+                  fontWeight: 700
+                }}
               >
-                Bytt inn
+                ⇄
               </button>
             </div>
           ))}
@@ -258,32 +274,28 @@ export default function App() {
 
       {/* --- SETT-NAVIGASJON UNDER BENKEN --- */}
       <div className="sett-navigasjon">
-        <div>
-          <b>Nåværende sett:</b> {settNr + 1} / {statistikkPerSett.length}
-        </div>
         <button
-          className="sett-ferdig-btn"
-          onClick={fullforSett}
-          disabled={statistikkPerSett.length >= 5}
-          style={{ marginRight: 8 }}
-        >
-          Sett ferdig
-        </button>
-        <button
-          className="forrige-sett-btn"
+          className="sett-arrow"
           onClick={() => settSettNr(n => Math.max(0, n - 1))}
           disabled={settNr === 0}
-          style={{ marginRight: 5 }}
-        >
-          ← Forrige sett
-        </button>
+          title="Forrige sett"
+        >←</button>
+        <span style={{ fontWeight: 500, margin: "0 0.6em" }}>
+          <b>Sett:</b> Sett {settNr + 1} av {statistikkPerSett.length}
+        </span>
         <button
-          className="neste-sett-btn"
+          className="sett-arrow"
           onClick={() => settSettNr(n => Math.min(statistikkPerSett.length - 1, n + 1))}
           disabled={settNr === statistikkPerSett.length - 1}
-        >
-          Neste sett →
-        </button>
+          title="Neste sett"
+        >→</button>
+        <button
+          className="sett-ferdig-mini"
+          onClick={fullforSett}
+          disabled={statistikkPerSett.length >= 5}
+          title="Fullfør sett"
+          style={{ marginLeft: 10 }}
+        >✔️ Sett ferdig</button>
       </div>
 
       {/* --- INNSTILLINGS-MODAL --- */}
@@ -291,27 +303,22 @@ export default function App() {
         <div className="modal-bg" onClick={() => setShowSettings(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h2>Innstillinger</h2>
-
             {/* --- BYTT POSISJON (TOPP) --- */}
             <h3>Bytter & Posisjoner</h3>
             <button onClick={handleSwapMode} style={{marginBottom: 8}}>
               {swapMode ? "Avslutt bytt posisjon" : "Bytt posisjon på spillere"}
             </button>
-
             {/* --- SPILLERADMIN --- */}
             <h3>Spilleradministrasjon</h3>
             <button onClick={leggTilSpillerFraModal}>Legg til spiller</button>
             <button onClick={() => setShowAdminModal(true)}>Administrer spillere</button>
-
             {/* --- STATISTIKK --- */}
             <h3>Statistikk</h3>
             <button onClick={() => setShowStatsTable(true)}>Vis statistikk</button>
             <button onClick={resetAlleStatistikk}>Nullstill statistikk (behold spillere)</button>
-
             {/* --- DANGEROUS --- */}
             <h3>Andre handlinger</h3>
             <button onClick={slettAlleSpillere} >Slett alle spillere og statistikk</button>
-
             <button onClick={() => setShowSettings(false)} style={{marginTop:'18px'}}>Lukk</button>
           </div>
         </div>
