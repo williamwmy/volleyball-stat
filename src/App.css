@@ -213,6 +213,8 @@ body {
   /* ADD THIS: */
   max-height: 96vh;
   overflow-y: auto;
+  margin-top: 8vh;
+
 }
 
 .modal table {
@@ -286,5 +288,49 @@ h2 {
   .modal {
     padding: 1rem 0.5rem;
     max-height: 96vh;
+  }
+  .benk-container {
+    margin-top: 10px;
+    margin-bottom: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+  }
+  
+  .benk-spiller-chip {
+    background: #dde4ed;
+    border-radius: 14px;
+    color: #18435a;
+    padding: 0.32em 1.13em 0.32em 0.95em;
+    font-weight: 500;
+    font-size: 1.05em;
+    margin-right: 4px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 1px 4px #0001;
+  }
+  
+  /* Swap-knapp på benk-spillere når swapMode */
+  .benk-spiller-chip.swap {
+    border: 2px dashed #ffe066;
+    background: #fffbe5;
+  }
+  
+  .benk-spiller-chip .swap-btn {
+    background: #ffe066;
+    color: #18435a;
+    font-weight: 700;
+    font-size: 1.17em;
+    border: none;
+    border-radius: 7px;
+    margin-left: 7px;
+    cursor: pointer;
+    padding: 0.19em 0.77em;
+    box-shadow: 0 1px 7px #0002;
+  }
+  
+  .benk-spiller-chip .swap-btn:active {
+    background: #ffecb3;
   }
 }

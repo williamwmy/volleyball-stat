@@ -21,6 +21,14 @@ const spillerFarger = [
   { navn: '#ffecb3', knapp: '#fff8e1' },
 ];
 
+// --- Finn første ledige posisjon (0–6) ---
+function finnFørsteLedigePosisjon(aktive) {
+  for (let i = 0; i < 7; i++) {
+    if (!aktive.some(s => s.posisjon === i)) return i;
+  }
+  return null;
+}
+
 function getDirection(start, end) {
   if (!start || !end) return null;
   const dx = end.x - start.x;
@@ -40,7 +48,6 @@ function DragOverlay({ visible, start, parentRect, kategori, dragPos, knappFarge
   const svgSize = 240;
   const center = svgSize / 2;
 
-  // Sentrer overlay på midten av knappen
   const top = (parentRect?.top ?? 0) + (parentRect?.height ?? 0) / 2 - center;
   const left = (parentRect?.left ?? 0) + (parentRect?.width ?? 0) / 2 - center;
 
@@ -240,7 +247,7 @@ function SimpleYFormasjon({ onScore, knappFarge, navnFarge }) {
   );
 }
 
-function SpillerRute({ spiller, onScore, idx }) {
+function SpillerRute({ spiller, onScore, idx, swapMode, onSwap, selectedForSwap }) {
   const farge = spillerFarger[idx % spillerFarger.length];
   const [feedback, setFeedback] = useState(null);
 
@@ -252,11 +259,16 @@ function SpillerRute({ spiller, onScore, idx }) {
 
   return (
     <div
-      className="spiller-rute"
+      className={`spiller-rute${swapMode ? ' swap-mode' : ''}${selectedForSwap ? ' swap-selected' : ''}`}
       style={{
         '--spiller-navn-farge': farge.navn,
         '--spiller-knapp-farge': farge.knapp,
+        border: swapMode ? '2.2px dashed #ffe066' : undefined,
+        boxShadow: selectedForSwap ? '0 0 0 5px #ff950033' : undefined,
+        cursor: swapMode ? 'pointer' : undefined,
       }}
+      onClick={swapMode ? onSwap : undefined}
+      title={swapMode ? 'Klikk for å velge spiller å bytte plass med' : undefined}
     >
       <div className="spiller-navn-rotated">
         <span>{spiller.nummer} {spiller.navn}</span>
@@ -271,6 +283,12 @@ function SpillerRute({ spiller, onScore, idx }) {
           +{feedback}
         </div>
       )}
+      {swapMode && (
+        <span style={{
+          position: "absolute", top: 12, right: 12, fontSize: "1.2rem",
+          color: selectedForSwap ? "#ff9500" : "#ffe066", fontWeight: 700,
+        }}>{selectedForSwap ? "✓" : "⇄"}</span>
+      )}
     </div>
   );
 }
@@ -280,8 +298,9 @@ export default function App() {
   const [statistikk, setStatistikk] = useState({});
   const [showSettings, setShowSettings] = useState(false);
   const [showStatsTable, setShowStatsTable] = useState(false);
-  const [statsTab, setStatsTab] = useState(0); // 0 = snitt, 1 = forsøk
-
+  const [statsTab, setStatsTab] = useState(0);
+  const [swapMode, setSwapMode] = useState(false);
+  const [swapFirstIdx, setSwapFirstIdx] = useState(null);
 
   useEffect(() => {
     db.spillere.toArray().then(setSpillere);
@@ -299,7 +318,6 @@ export default function App() {
       if (!oppsummert[spillerId][type]) oppsummert[spillerId][type] = [];
       oppsummert[spillerId][type].push(score);
     });
-    // Logg med spillerdata for enkelthendelser (ikke brukt nå, men beholdes for evt. senere)
     oppsummert.__logg = stats.map(row => ({
       ...row,
       navn: spillereMap[row.spillerId]?.navn || "",
@@ -308,13 +326,30 @@ export default function App() {
     setStatistikk(oppsummert);
   }
 
-  async function leggTilSpiller() {
+  // --- SPILLER AKTIVITET ---
+
+  // Legg til spiller på valgt posisjon (fra pluss-knapp)
+  async function leggTilSpillerPåPosisjon(posisjon) {
     const navn = prompt('Navn på spiller?');
     const nummer = prompt('Draktnummer?');
     if (navn && nummer) {
-      await db.spillere.add({ navn, nummer });
+      await db.spillere.add({ navn, nummer, posisjon, active: true });
       setSpillere(await db.spillere.toArray());
     }
+  }
+
+  // Legg til spiller fra modal (automatisk ledig posisjon)
+  async function leggTilSpillerFraModal() {
+    const navn = prompt('Navn på spiller?');
+    const nummer = prompt('Draktnummer?');
+    if (!navn || !nummer) return;
+    const alle = await db.spillere.toArray();
+    const aktive = alle.filter(s => s.active === true);
+    let posisjon = finnFørsteLedigePosisjon(aktive);
+    let active = posisjon !== null;
+    if (!active) posisjon = aktive.length + (await db.spillere.where('active').equals(false).count());
+    await db.spillere.add({ navn, nummer, posisjon, active });
+    setSpillere(await db.spillere.toArray());
   }
 
   async function slettAlleSpillere() {
@@ -334,9 +369,41 @@ export default function App() {
     hentStatistikk();
   }
 
-  // 2x4 grid, siste rute er innstillinger
-  const ruter = [...spillere.slice(0, 7)];
-  while (ruter.length < 7) ruter.push(null);
+  // SWAP LOGIKK
+  const aktiveSpillere = spillere
+    .filter(s => s.active)
+    .sort((a, b) => (a.posisjon ?? 0) - (b.posisjon ?? 0))
+    .slice(0, 7);
+
+  // Fyll ut til 7 ruter
+  const ruter = [];
+  for (let i = 0; i < 7; i++) {
+    const spiller = aktiveSpillere.find(s => s.posisjon === i);
+    ruter.push(spiller || null);
+  }
+
+  // Swap handling
+  function handleSwapMode() {
+    setSwapMode(!swapMode);
+    setSwapFirstIdx(null);
+  }
+  async function handleSwapClick(idx) {
+    if (!swapMode || !ruter[idx]) return;
+    if (swapFirstIdx === null) {
+      setSwapFirstIdx(idx);
+    } else if (swapFirstIdx !== idx) {
+      // Bytt posisjon
+      const spiller1 = ruter[swapFirstIdx];
+      const spiller2 = ruter[idx];
+      const pos1 = spiller1.posisjon ?? swapFirstIdx;
+      const pos2 = spiller2.posisjon ?? idx;
+      await db.spillere.update(spiller1.id, { posisjon: pos2 });
+      await db.spillere.update(spiller2.id, { posisjon: pos1 });
+      setSwapFirstIdx(null);
+      setSwapMode(false);
+      setTimeout(() => db.spillere.toArray().then(setSpillere), 300);
+    }
+  }
 
   return (
     <div className="app-main">
@@ -348,13 +415,22 @@ export default function App() {
               spiller={spiller}
               onScore={onScore}
               idx={idx}
+              swapMode={swapMode}
+              onSwap={() => handleSwapClick(idx)}
+              selectedForSwap={swapMode && swapFirstIdx === idx}
             />
           ) : (
             <div
               className="spiller-rute tom"
               key={`tom-${idx}`}
-              onClick={leggTilSpiller}
-              style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}
+              onClick={swapMode ? undefined : () => leggTilSpillerPåPosisjon(idx)}
+              style={{
+                cursor: swapMode ? "not-allowed" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                position: "relative"
+              }}
               title="Legg til spiller"
             >
               <span
@@ -381,23 +457,27 @@ export default function App() {
         </div>
       </div>
 
+      {/* --- MODAL: INNSTILLINGER --- */}
       {showSettings && (
         <div className="modal-bg" onClick={() => setShowSettings(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h2>Innstillinger</h2>
-            <button onClick={leggTilSpiller}>Legg til spiller</button>
+            <button onClick={leggTilSpillerFraModal}>Legg til spiller</button>
             <button onClick={slettAlleSpillere}>Slett alle spillere/statistikk</button>
-            <button onClick={() => setShowStatsTable(true)}>Vis statistikk-tabell</button>
+            <button onClick={() => setShowStatsTable(true)}>Vis statistikk</button>
+            <button onClick={handleSwapMode} style={{ background: swapMode ? "#f5f6fa" : undefined, fontWeight: swapMode ? 700 : undefined }}>
+              {swapMode ? "Avslutt bytt posisjon" : "Bytt posisjon på spillere"}
+            </button>
             <button onClick={() => setShowSettings(false)}>Lukk</button>
           </div>
         </div>
       )}
 
+      {/* --- MODAL: STATISTIKK --- */}
       {showStatsTable && (
         <div className="modal-bg" onClick={() => setShowStatsTable(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h2>Statistikk</h2>
-
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
               <button
                 onClick={() => setStatsTab(0)}
@@ -420,96 +500,87 @@ export default function App() {
                 Alle forsøk
               </button>
             </div>
-
-            {/* TAB 1: SNITT */}
             {statsTab === 0 && (
-              <>
-                <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1.4rem', fontSize: "1.06rem" }}>
-                  <thead>
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1.4rem', fontSize: "1.06rem" }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left' }}>#</th>
+                    <th>Navn</th>
+                    <th>Serve</th>
+                    <th>Mottak</th>
+                    <th>Angrep</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {spillere.length === 0 && (
                     <tr>
-                      <th style={{ textAlign: 'left' }}>#</th>
-                      <th>Navn</th>
-                      <th>Serve</th>
-                      <th>Mottak</th>
-                      <th>Angrep</th>
+                      <td colSpan={5} style={{ textAlign: "center", color: "#bbb" }}>
+                        Ingen spillere
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {spillere.length === 0 && (
-                      <tr>
-                        <td colSpan={5} style={{ textAlign: "center", color: "#bbb" }}>
-                          Ingen spillere
-                        </td>
+                  )}
+                  {spillere.map((spiller, idx) => {
+                    const stats = statistikk[spiller.id] || {};
+                    function avg(arr) {
+                      return arr && arr.length
+                        ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2)
+                        : '-';
+                    }
+                    return (
+                      <tr key={spiller.id} style={{ background: idx % 2 ? "#f5f6fa" : "white" }}>
+                        <td>{spiller.nummer}</td>
+                        <td>{spiller.navn}</td>
+                        <td>{avg(stats.serve)}</td>
+                        <td>{avg(stats.pass)}</td>
+                        <td>{avg(stats.attack)}</td>
                       </tr>
-                    )}
-                    {spillere.map((spiller, idx) => {
-                      const stats = statistikk[spiller.id] || {};
-                      function avg(arr) {
-                        return arr && arr.length
-                          ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2)
-                          : '-';
-                      }
-                      return (
-                        <tr key={spiller.id} style={{ background: idx % 2 ? "#f5f6fa" : "white" }}>
-                          <td>{spiller.nummer}</td>
-                          <td>{spiller.navn}</td>
-                          <td>{avg(stats.serve)}</td>
-                          <td>{avg(stats.pass)}</td>
-                          <td>{avg(stats.attack)}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </>
+                    );
+                  })}
+                </tbody>
+              </table>
             )}
-
-            {/* TAB 2: ALLE FORSØK */}
             {statsTab === 1 && (
-              <>
-                <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1.5rem', fontSize: "1rem" }}>
-                  <thead>
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1.5rem', fontSize: "1rem" }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left' }}>#</th>
+                    <th>Navn</th>
+                    <th>Serve</th>
+                    <th>Mottak</th>
+                    <th>Angrep</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {spillere.length === 0 && (
                     <tr>
-                      <th style={{ textAlign: 'left' }}>#</th>
-                      <th>Navn</th>
-                      <th>Serve</th>
-                      <th>Mottak</th>
-                      <th>Angrep</th>
+                      <td colSpan={5} style={{ textAlign: "center", color: "#bbb" }}>
+                        Ingen spillere
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {spillere.length === 0 && (
-                      <tr>
-                        <td colSpan={5} style={{ textAlign: "center", color: "#bbb" }}>
-                          Ingen spillere
-                        </td>
+                  )}
+                  {spillere.map((spiller, idx) => {
+                    const stats = statistikk[spiller.id] || {};
+                    return (
+                      <tr key={spiller.id} style={{ background: idx % 2 ? "#fafafb" : "white" }}>
+                        <td>{spiller.nummer}</td>
+                        <td>{spiller.navn}</td>
+                        <td>{(stats.serve || []).join(' ') || '-'}</td>
+                        <td>{(stats.pass || []).join(' ') || '-'}</td>
+                        <td>{(stats.attack || []).join(' ') || '-'}</td>
                       </tr>
-                    )}
-                    {spillere.map((spiller, idx) => {
-                      const stats = statistikk[spiller.id] || {};
-                      return (
-                        <tr key={spiller.id} style={{ background: idx % 2 ? "#fafafb" : "white" }}>
-                          <td>{spiller.nummer}</td>
-                          <td>{spiller.navn}</td>
-                          <td>{(stats.serve || []).join(' ') || '-'}</td>
-                          <td>{(stats.pass || []).join(' ') || '-'}</td>
-                          <td>{(stats.attack || []).join(' ') || '-'}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </>
+                    );
+                  })}
+                </tbody>
+              </table>
             )}
-
             <button onClick={() => setShowStatsTable(false)} style={{ marginTop: 10 }}>
               Lukk
             </button>
           </div>
-
         </div>
       )}
 
+      {/* Statistikk-kompakt nederst */}
       <h2>Statistikk</h2>
       <div>
         {spillere.map((spiller, idx) => (

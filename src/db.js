@@ -1,7 +1,7 @@
 import Dexie from 'dexie';
 
-export const db = new Dexie('volleyballStatistikkDB');
-db.version(1).stores({
-  spillere: '++id, navn, nummer',
+export const db = new Dexie('volleyballstat');
+db.version(2).stores({
+  spillere: '++id, navn, nummer, active, posisjon', // aktive + posisjon må være indeksert
   statistikk: '++id, spillerId, type, score, tidspunkt'
 });
