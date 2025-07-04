@@ -57,42 +57,52 @@ body {
   box-shadow: none;
 }
 
-.spiller-navn {
-  font-size: 1.32rem;
-  font-weight: bold;
-  margin-bottom: 0.8rem;
-  color: #fff8dc;
-  text-align: center;
+/* Navn og nummer – rotet og med spillerfarge */
+.spiller-navn-rotated {
+  position: absolute;
+  top: 80px;
+  left: 8px;
+  z-index: 10;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--spiller-navn-farge, #ffe066);
   letter-spacing: 0.01em;
-  user-select: none;
+  transform: rotate(-90deg) translate(-10%, 0%);
+  transform-origin: left top;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: visible;
+  pointer-events: none;
+  background: none;
+  text-shadow: 1px 1px 2px #17536a77;
 }
 
 /* ----------- Simple Y-formasjon ----------- */
 
 .simple-y {
+  margin-top: 0.1rem;
+  margin-bottom: 0.0rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  height: 140px;
-  margin-top: 0.6rem;
-  margin-bottom: 0.4rem;
+  justify-content: flex-start;
+  height: 160px;
   position: relative;
 }
 
 .simple-y-btn {
-  width: 76px;
-  height: 76px;
-  min-width: 76px;
-  min-height: 76px;
-  max-width: 76px;
-  max-height: 76px;
+  width: 62px;
+  height: 62px;
+  min-width: 62px;
+  min-height: 62px;
+  max-width: 62px;
+  max-height: 62px;
   border-radius: 50%;
   border: 3px solid #ffe066;
-  background: #f6e7c0;
+  background: var(--spiller-knapp-farge, #f6e7c0);
   color: #194e62;
   font-weight: bold;
-  font-size: 1.13rem;
+  font-size: 1.1rem;
   cursor: grab;
   user-select: none;
   box-shadow: 0 2px 8px #0002;
@@ -104,20 +114,17 @@ body {
   justify-content: center;
 }
 
-.simple-y-btn:active {
-  background: #ffe066;
-  border-color: #ff9500;
-  box-shadow: 0 4px 16px #ff950022;
+.simple-y-btn.top {
+  margin-top: 0.25rem;
+  margin-bottom: 0.85rem;
 }
 
-/* juster bunn-gap litt */
 .simple-y-bottom {
   width: 100%;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  margin-top: 0.4rem;
-  gap: 22px;
+  gap: 16px;
 }
 
 /* ----------- Drag overlay ----------- */
@@ -141,10 +148,10 @@ body {
   }
 }
 
-/* Score pop skal ligge over alle knapper */
+/* ----------- Feedback (score pop) ----------- */
 .score-feedback {
   position: absolute;
-  z-index: 20;
+  z-index: 30;
   top: 46%;
   left: 50%;
   transform: translate(-50%, -52%) scale(1.18);
@@ -159,6 +166,13 @@ body {
   pointer-events: none;
   opacity: 1;
   animation: feedbackpop 0.58s cubic-bezier(.2,1.7,.3,1.1) both;
+}
+
+@keyframes feedbackpop {
+  0% { opacity: 0; transform: translate(-50%,-60%) scale(0.75);}
+  17% { opacity: 1; transform: translate(-50%,-52%) scale(1.18);}
+  68% { opacity: 1; transform: translate(-50%,-51%) scale(1);}
+  100% { opacity: 0; transform: translate(-50%,-46%) scale(0.80);}
 }
 
 /* ----------- Modal ----------- */

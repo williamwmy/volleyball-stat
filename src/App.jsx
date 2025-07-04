@@ -11,6 +11,17 @@ const dragDirections = [
   { key: 'left', dx: -90, dy: 0, label: 0 },
 ];
 
+// Fargepalett: navn = tekstfarge, knapp = knappbakgrunn
+const spillerFarger = [
+  { navn: '#ff9500', knapp: '#fffbe5' }, // Oransje + lys gul
+  { navn: '#5fd6ff', knapp: '#e6fbff' }, // Turkis + lys turkis
+  { navn: '#cabfff', knapp: '#f7f1ff' }, // Lilla + lys lilla
+  { navn: '#a5ffe3', knapp: '#edfff8' }, // Mint + lys mint
+  { navn: '#ffe066', knapp: '#fffbe5' }, // Gul + lys gul
+  { navn: '#d0ffc5', knapp: '#f5fff2' }, // Grønn + lys grønn
+  { navn: '#ffecb3', knapp: '#fff8e1' }, // Lys oransje + offwhite
+];
+
 function getDirection(start, end) {
   if (!start || !end) return null;
   const dx = end.x - start.x;
@@ -25,7 +36,7 @@ function getDirection(start, end) {
   return null;
 }
 
-function DragOverlay({ visible, start, parentRect, kategori, dragPos }) {
+function DragOverlay({ visible, start, parentRect, kategori, dragPos, knappFarge, navnFarge }) {
   if (!visible || !start) return null;
   const svgSize = 240;
   const center = svgSize / 2;
@@ -67,7 +78,7 @@ function DragOverlay({ visible, start, parentRect, kategori, dragPos }) {
                 y1={center}
                 x2={center + dir.dx}
                 y2={center + dir.dy}
-                stroke={highlight === dir.key ? "#ff9500" : "#246c8e"}
+                stroke={highlight === dir.key ? navnFarge : "#246c8e"}
                 strokeWidth={highlight === dir.key ? 9 : 6}
                 strokeLinecap="round"
                 opacity={highlight === dir.key ? 1 : 0.8}
@@ -78,8 +89,8 @@ function DragOverlay({ visible, start, parentRect, kategori, dragPos }) {
                 cx={center + dir.dx}
                 cy={center + dir.dy}
                 r="28"
-                fill={highlight === dir.key ? "#ffeb99" : "#ffe066"}
-                stroke={highlight === dir.key ? "#ff9500" : "#246c8e"}
+                fill={highlight === dir.key ? knappFarge : "#ffe066"}
+                stroke={highlight === dir.key ? navnFarge : "#246c8e"}
                 strokeWidth={highlight === dir.key ? 6 : 4}
                 opacity="1"
                 style={{ transition: 'all 0.18s' }}
@@ -104,8 +115,8 @@ function DragOverlay({ visible, start, parentRect, kategori, dragPos }) {
             textAnchor="middle"
             fontSize="1.35rem"
             fontWeight="bold"
-            fill="#194e62"
-            opacity="0.82"
+            fill={navnFarge}
+            opacity="0.88"
             style={{
               letterSpacing: "0.08em",
               textShadow: "0 2px 6px #fff7"
@@ -119,7 +130,7 @@ function DragOverlay({ visible, start, parentRect, kategori, dragPos }) {
   );
 }
 
-function SimpleYFormasjon({ onScore }) {
+function SimpleYFormasjon({ onScore, knappFarge, navnFarge }) {
   // Drag state
   const [dragState, setDragState] = useState(null);
   const btnRefs = {
@@ -183,7 +194,12 @@ function SimpleYFormasjon({ onScore }) {
         ref={btnRefs.serve}
         onMouseDown={e => handleStart(e, 'serve')}
         onTouchStart={e => handleStart(e, 'serve')}
-        style={{ touchAction: 'none' }}
+        style={{
+          touchAction: 'none',
+          background: knappFarge,
+          color: '#194e62',
+          borderColor: '#ffe066',
+        }}
       >
         Serve
       </button>
@@ -193,7 +209,12 @@ function SimpleYFormasjon({ onScore }) {
           ref={btnRefs.pass}
           onMouseDown={e => handleStart(e, 'pass')}
           onTouchStart={e => handleStart(e, 'pass')}
-          style={{ touchAction: 'none' }}
+          style={{
+            touchAction: 'none',
+            background: knappFarge,
+            color: '#194e62',
+            borderColor: '#ffe066',
+          }}
         >
           Pass
         </button>
@@ -202,7 +223,12 @@ function SimpleYFormasjon({ onScore }) {
           ref={btnRefs.attack}
           onMouseDown={e => handleStart(e, 'attack')}
           onTouchStart={e => handleStart(e, 'attack')}
-          style={{ touchAction: 'none' }}
+          style={{
+            touchAction: 'none',
+            background: knappFarge,
+            color: '#194e62',
+            borderColor: '#ffe066',
+          }}
         >
           Attack
         </button>
@@ -213,13 +239,16 @@ function SimpleYFormasjon({ onScore }) {
         parentRect={dragState?.parentRect}
         kategori={dragState?.kategori}
         dragPos={dragState?.dragPos}
+        knappFarge={knappFarge}
+        navnFarge={navnFarge}
       />
     </div>
   );
 }
 
-function SpillerRute({ spiller, onScore }) {
-  // For feedback: score pop
+function SpillerRute({ spiller, onScore, idx }) {
+  // Farger for denne spilleren
+  const farge = spillerFarger[idx % spillerFarger.length];
   const [feedback, setFeedback] = useState(null);
 
   async function handleScore(kategori, score) {
@@ -229,12 +258,21 @@ function SpillerRute({ spiller, onScore }) {
   }
 
   return (
-    <div className="spiller-rute">
-      <div className="spiller-navn">
-        {spiller.nummer} {spiller.navn}
+    <div
+      className="spiller-rute"
+      style={{
+        '--spiller-navn-farge': farge.navn,
+        '--spiller-knapp-farge': farge.knapp,
+      }}
+    >
+      <div className="spiller-navn-rotated">
+        <span>{spiller.nummer} {spiller.navn}</span>
       </div>
-      <SimpleYFormasjon onScore={handleScore} />
-      {/* Score-feedback skal ligge ETTER SimpleYFormasjon, ikke INNI */}
+      <SimpleYFormasjon
+        onScore={handleScore}
+        knappFarge={farge.knapp}
+        navnFarge={farge.navn}
+      />
       {feedback !== null && (
         <div className="score-feedback">
           +{feedback}
@@ -306,6 +344,7 @@ export default function App() {
               key={`spiller-${spiller.id}-${idx}`}
               spiller={spiller}
               onScore={onScore}
+              idx={idx}
             />
           ) : (
             <div className="spiller-rute tom" key={`tom-${idx}`}></div>
@@ -331,9 +370,12 @@ export default function App() {
 
       <h2>Statistikk</h2>
       <div>
-        {spillere.map(spiller => (
+        {spillere.map((spiller, idx) => (
           <div key={`stats-${spiller.id}`}>
-            <b>{spiller.nummer} {spiller.navn}</b>:
+            <b style={{ color: spillerFarger[idx % spillerFarger.length].navn }}>
+              {spiller.nummer} {spiller.navn}
+            </b>
+            :
             {kategoriLabels.map(kat => (
               <span key={`kat-${spiller.id}-${kat}`} style={{ marginLeft: 12 }}>
                 {kat}:
