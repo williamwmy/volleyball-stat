@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { db } from './db';
 import './App.css';
 
+// --- KONFIG --
 const kategoriLabels = ['Serve', 'Pass', 'Attack'];
 const dragScoreMap = { up: 3, right: 2, down: 1, left: 0 };
 const dragDirections = [
@@ -10,7 +11,6 @@ const dragDirections = [
   { key: 'down', dx: 0, dy: 62, label: 1 },
   { key: 'left', dx: -62, dy: 0, label: 0 },
 ];
-
 const spillerFarger = [
   { navn: '#ff9500', knapp: '#fffbe5' },
   { navn: '#5fd6ff', knapp: '#e6fbff' },
@@ -40,10 +40,9 @@ function DragOverlay({ visible, start, parentRect, kategori, dragPos, knappFarge
   const svgSize = 240;
   const center = svgSize / 2;
 
+  // Sentrer overlay på midten av knappen
   const top = (parentRect?.top ?? 0) + (parentRect?.height ?? 0) / 2 - center;
   const left = (parentRect?.left ?? 0) + (parentRect?.width ?? 0) / 2 - center;
-
-  // BRUKER NÅ GLOBAL dragDirections, IKKE DEFINERT HER!
 
   let highlight = null;
   if (dragPos && start) {
@@ -126,7 +125,6 @@ function DragOverlay({ visible, start, parentRect, kategori, dragPos, knappFarge
   );
 }
 
-
 function SimpleYFormasjon({ onScore, knappFarge, navnFarge }) {
   const [dragState, setDragState] = useState(null);
   const btnRefs = {
@@ -166,7 +164,7 @@ function SimpleYFormasjon({ onScore, knappFarge, navnFarge }) {
     setDragState(null);
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (dragState) {
       window.addEventListener('mousemove', handleMove);
       window.addEventListener('mouseup', handleEnd);
@@ -281,20 +279,32 @@ export default function App() {
   const [spillere, setSpillere] = useState([]);
   const [statistikk, setStatistikk] = useState({});
   const [showSettings, setShowSettings] = useState(false);
+  const [showStatsTable, setShowStatsTable] = useState(false);
+  const [statsTab, setStatsTab] = useState(0); // 0 = snitt, 1 = forsøk
+
 
   useEffect(() => {
     db.spillere.toArray().then(setSpillere);
     hentStatistikk();
+    // eslint-disable-next-line
   }, []);
 
   async function hentStatistikk() {
     const stats = await db.statistikk.toArray();
+    const spillereList = await db.spillere.toArray();
+    const spillereMap = Object.fromEntries(spillereList.map(s => [s.id, s]));
     const oppsummert = {};
     stats.forEach(({ spillerId, type, score }) => {
       if (!oppsummert[spillerId]) oppsummert[spillerId] = {};
       if (!oppsummert[spillerId][type]) oppsummert[spillerId][type] = [];
       oppsummert[spillerId][type].push(score);
     });
+    // Logg med spillerdata for enkelthendelser (ikke brukt nå, men beholdes for evt. senere)
+    oppsummert.__logg = stats.map(row => ({
+      ...row,
+      navn: spillereMap[row.spillerId]?.navn || "",
+      nummer: spillereMap[row.spillerId]?.nummer || "",
+    }));
     setStatistikk(oppsummert);
   }
 
@@ -331,39 +341,40 @@ export default function App() {
   return (
     <div className="app-main">
       <div className="grid-container">
-      {ruter.map((spiller, idx) =>
-        spiller ? (
-          <SpillerRute
-            key={`spiller-${spiller.id}-${idx}`}
-            spiller={spiller}
-            onScore={onScore}
-            idx={idx}
-          />
-        ) : (
-          <div
-            className="spiller-rute tom"
-            key={`tom-${idx}`}
-            onClick={leggTilSpiller}
-            style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}
-            title="Legg til spiller"
-          >
-            <span
-              style={{
-                fontSize: "3.1rem",
-                color: "#b5b5b5",
-                fontWeight: 500,
-                userSelect: "none",
-                position: "absolute",
-                top: "48%",
-                left: "50%",
-                transform: "translate(-50%, -52%)",
-                pointerEvents: "none"
-              }}
-              aria-label="Pluss ikon"
-            >+</span>
-          </div>
-        )
-      )}
+        {ruter.map((spiller, idx) =>
+          spiller ? (
+            <SpillerRute
+              key={`spiller-${spiller.id}-${idx}`}
+              spiller={spiller}
+              onScore={onScore}
+              idx={idx}
+            />
+          ) : (
+            <div
+              className="spiller-rute tom"
+              key={`tom-${idx}`}
+              onClick={leggTilSpiller}
+              style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}
+              title="Legg til spiller"
+            >
+              <span
+                style={{
+                  fontSize: "3.1rem",
+                  color: "#b5b5b5",
+                  fontWeight: 500,
+                  userSelect: "none",
+                  position: "absolute",
+                  top: "48%",
+                  left: "50%",
+                  transform: "translate(-50%, -52%)",
+                  pointerEvents: "none"
+                }}
+                aria-label="Pluss ikon"
+              >+</span>
+            </div>
+          )
+        )}
+        {/* Siste rute: Innstillinger */}
         <div className="spiller-rute settings" onClick={() => setShowSettings(true)}>
           <div style={{ fontSize: 48, textAlign: 'center' }}>⚙️</div>
           <div style={{ textAlign: 'center', marginTop: 8 }}>Innstillinger</div>
@@ -376,8 +387,126 @@ export default function App() {
             <h2>Innstillinger</h2>
             <button onClick={leggTilSpiller}>Legg til spiller</button>
             <button onClick={slettAlleSpillere}>Slett alle spillere/statistikk</button>
+            <button onClick={() => setShowStatsTable(true)}>Vis statistikk-tabell</button>
             <button onClick={() => setShowSettings(false)}>Lukk</button>
           </div>
+        </div>
+      )}
+
+      {showStatsTable && (
+        <div className="modal-bg" onClick={() => setShowStatsTable(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h2>Statistikk</h2>
+
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
+              <button
+                onClick={() => setStatsTab(0)}
+                style={{
+                  fontWeight: statsTab === 0 ? "bold" : undefined,
+                  textDecoration: statsTab === 0 ? "underline" : undefined,
+                  marginRight: 7,
+                }}
+              >
+                Snitt
+              </button>
+              <button
+                onClick={() => setStatsTab(1)}
+                style={{
+                  fontWeight: statsTab === 1 ? "bold" : undefined,
+                  textDecoration: statsTab === 1 ? "underline" : undefined,
+                  marginLeft: 7,
+                }}
+              >
+                Alle forsøk
+              </button>
+            </div>
+
+            {/* TAB 1: SNITT */}
+            {statsTab === 0 && (
+              <>
+                <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1.4rem', fontSize: "1.06rem" }}>
+                  <thead>
+                    <tr>
+                      <th style={{ textAlign: 'left' }}>#</th>
+                      <th>Navn</th>
+                      <th>Serve</th>
+                      <th>Mottak</th>
+                      <th>Angrep</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {spillere.length === 0 && (
+                      <tr>
+                        <td colSpan={5} style={{ textAlign: "center", color: "#bbb" }}>
+                          Ingen spillere
+                        </td>
+                      </tr>
+                    )}
+                    {spillere.map((spiller, idx) => {
+                      const stats = statistikk[spiller.id] || {};
+                      function avg(arr) {
+                        return arr && arr.length
+                          ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2)
+                          : '-';
+                      }
+                      return (
+                        <tr key={spiller.id} style={{ background: idx % 2 ? "#f5f6fa" : "white" }}>
+                          <td>{spiller.nummer}</td>
+                          <td>{spiller.navn}</td>
+                          <td>{avg(stats.serve)}</td>
+                          <td>{avg(stats.pass)}</td>
+                          <td>{avg(stats.attack)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </>
+            )}
+
+            {/* TAB 2: ALLE FORSØK */}
+            {statsTab === 1 && (
+              <>
+                <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1.5rem', fontSize: "1rem" }}>
+                  <thead>
+                    <tr>
+                      <th style={{ textAlign: 'left' }}>#</th>
+                      <th>Navn</th>
+                      <th>Serve</th>
+                      <th>Mottak</th>
+                      <th>Angrep</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {spillere.length === 0 && (
+                      <tr>
+                        <td colSpan={5} style={{ textAlign: "center", color: "#bbb" }}>
+                          Ingen spillere
+                        </td>
+                      </tr>
+                    )}
+                    {spillere.map((spiller, idx) => {
+                      const stats = statistikk[spiller.id] || {};
+                      return (
+                        <tr key={spiller.id} style={{ background: idx % 2 ? "#fafafb" : "white" }}>
+                          <td>{spiller.nummer}</td>
+                          <td>{spiller.navn}</td>
+                          <td>{(stats.serve || []).join(' ') || '-'}</td>
+                          <td>{(stats.pass || []).join(' ') || '-'}</td>
+                          <td>{(stats.attack || []).join(' ') || '-'}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </>
+            )}
+
+            <button onClick={() => setShowStatsTable(false)} style={{ marginTop: 10 }}>
+              Lukk
+            </button>
+          </div>
+
         </div>
       )}
 
