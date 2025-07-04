@@ -259,13 +259,14 @@ function SpillerRute({ spiller, onScore, idx, swapMode, onSwap, selectedForSwap 
 
   return (
     <div
-      className={`spiller-rute${swapMode ? ' swap-mode' : ''}${selectedForSwap ? ' swap-selected' : ''}`}
+      className={[
+        "spiller-rute",
+        swapMode ? "swap-mode" : "",
+        selectedForSwap ? "swap-selected" : ""
+      ].join(" ")}
       style={{
         '--spiller-navn-farge': farge.navn,
-        '--spiller-knapp-farge': farge.knapp,
-        border: swapMode ? '2.2px dashed #ffe066' : undefined,
-        boxShadow: selectedForSwap ? '0 0 0 5px #ff950033' : undefined,
-        cursor: swapMode ? 'pointer' : undefined,
+        '--spiller-knapp-farge': farge.knapp
       }}
       onClick={swapMode ? onSwap : undefined}
       title={swapMode ? 'Klikk for å velge spiller å bytte plass med' : undefined}
@@ -284,10 +285,9 @@ function SpillerRute({ spiller, onScore, idx, swapMode, onSwap, selectedForSwap 
         </div>
       )}
       {swapMode && (
-        <span style={{
-          position: "absolute", top: 12, right: 12, fontSize: "1.2rem",
-          color: selectedForSwap ? "#ff9500" : "#ffe066", fontWeight: 700,
-        }}>{selectedForSwap ? "✓" : "⇄"}</span>
+        <span className={selectedForSwap ? "swap-indikator valgt" : "swap-indikator"}>
+          {selectedForSwap ? "✓" : "⇄"}
+        </span>
       )}
     </div>
   );
@@ -439,7 +439,7 @@ export default function App() {
       {ønsketInn && (
         <div className="onsket-inn-varsel">
           Klikk på spilleren du vil bytte ut for å sette inn <b>{ønsketInn.navn}</b>!
-          <button onClick={() => setØnsketInn(null)}>Avbryt</button>
+          <button className="onsket-inn-avbryt" onClick={() => setØnsketInn(null)}>Avbryt</button>
         </div>
       )}
       <div className="grid-container">
@@ -462,14 +462,6 @@ export default function App() {
               className="spiller-rute tom"
               key={`tom-${idx}`}
               onClick={swapMode || ønsketInn ? undefined : () => leggTilSpillerPåPosisjon(idx)}
-              style={{
-                cursor: swapMode || ønsketInn ? "not-allowed" : "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                position: "relative"
-              }}
-              title="Legg til spiller"
             >
               <span className="pluss-ikon" aria-label="Pluss ikon">+</span>
             </div>
@@ -477,15 +469,15 @@ export default function App() {
         )}
         {/* Siste rute: Innstillinger */}
         <div className="spiller-rute settings" onClick={() => setShowSettings(true)}>
-          <div style={{ fontSize: 48, textAlign: 'center' }}>⚙️</div>
-          <div style={{ textAlign: 'center', marginTop: 8 }}>Innstillinger</div>
+          <div className="innstillinger-ikon">⚙️</div>
+          <div className="innstillinger-label">Innstillinger</div>
         </div>
       </div>
 
       {/* BENKEN */}
       <div className="benk-container">
         {spillere.filter(s => !s.active).length === 0 && (
-          <div style={{ color: "#bbb" }}>Ingen på benken</div>
+          <div className="benk-tom">Ingen på benken</div>
         )}
         {spillere
           .filter(s => !s.active)
@@ -512,7 +504,10 @@ export default function App() {
             <button onClick={leggTilSpillerFraModal}>Legg til spiller</button>
             <button onClick={slettAlleSpillere}>Slett alle spillere/statistikk</button>
             <button onClick={() => setShowStatsTable(true)}>Vis statistikk</button>
-            <button onClick={handleSwapMode} style={{ background: swapMode ? "#f5f6fa" : undefined, fontWeight: swapMode ? 700 : undefined }}>
+            <button
+              className={`swap-mode-btn${swapMode ? " aktiv" : ""}`}
+              onClick={handleSwapMode}
+            >
               {swapMode ? "Avslutt bytt posisjon" : "Bytt posisjon på spillere"}
             </button>
             <button onClick={() => setShowSettings(false)}>Lukk</button>
@@ -525,33 +520,25 @@ export default function App() {
         <div className="modal-bg" onClick={() => setShowStatsTable(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h2>Statistikk</h2>
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
+            <div className="stats-tab-row">
               <button
+                className={statsTab === 0 ? "tab-btn aktiv" : "tab-btn"}
                 onClick={() => setStatsTab(0)}
-                style={{
-                  fontWeight: statsTab === 0 ? "bold" : undefined,
-                  textDecoration: statsTab === 0 ? "underline" : undefined,
-                  marginRight: 7,
-                }}
               >
                 Snitt
               </button>
               <button
+                className={statsTab === 1 ? "tab-btn aktiv" : "tab-btn"}
                 onClick={() => setStatsTab(1)}
-                style={{
-                  fontWeight: statsTab === 1 ? "bold" : undefined,
-                  textDecoration: statsTab === 1 ? "underline" : undefined,
-                  marginLeft: 7,
-                }}
               >
                 Alle forsøk
               </button>
             </div>
             {statsTab === 0 && (
-              <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1.4rem', fontSize: "1.06rem" }}>
+              <table className="statistikk-tabell">
                 <thead>
                   <tr>
-                    <th style={{ textAlign: 'left' }}>#</th>
+                    <th>#</th>
                     <th>Navn</th>
                     <th>Serve</th>
                     <th>Mottak</th>
@@ -561,7 +548,7 @@ export default function App() {
                 <tbody>
                   {spillere.length === 0 && (
                     <tr>
-                      <td colSpan={5} style={{ textAlign: "center", color: "#bbb" }}>
+                      <td colSpan={5} className="tom-tekst">
                         Ingen spillere
                       </td>
                     </tr>
@@ -574,7 +561,7 @@ export default function App() {
                         : '-';
                     }
                     return (
-                      <tr key={spiller.id} style={{ background: idx % 2 ? "#f5f6fa" : "white" }}>
+                      <tr key={spiller.id}>
                         <td>{spiller.nummer}</td>
                         <td>{spiller.navn}</td>
                         <td>{avg(stats.serve)}</td>
@@ -587,10 +574,10 @@ export default function App() {
               </table>
             )}
             {statsTab === 1 && (
-              <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1.5rem', fontSize: "1rem" }}>
+              <table className="statistikk-tabell">
                 <thead>
                   <tr>
-                    <th style={{ textAlign: 'left' }}>#</th>
+                    <th>#</th>
                     <th>Navn</th>
                     <th>Serve</th>
                     <th>Mottak</th>
@@ -600,7 +587,7 @@ export default function App() {
                 <tbody>
                   {spillere.length === 0 && (
                     <tr>
-                      <td colSpan={5} style={{ textAlign: "center", color: "#bbb" }}>
+                      <td colSpan={5} className="tom-tekst">
                         Ingen spillere
                       </td>
                     </tr>
@@ -608,7 +595,7 @@ export default function App() {
                   {spillere.map((spiller, idx) => {
                     const stats = statistikk[spiller.id] || {};
                     return (
-                      <tr key={spiller.id} style={{ background: idx % 2 ? "#fafafb" : "white" }}>
+                      <tr key={spiller.id}>
                         <td>{spiller.nummer}</td>
                         <td>{spiller.navn}</td>
                         <td>{(stats.serve || []).join(' ') || '-'}</td>
@@ -620,7 +607,7 @@ export default function App() {
                 </tbody>
               </table>
             )}
-            <button onClick={() => setShowStatsTable(false)} style={{ marginTop: 10 }}>
+            <button onClick={() => setShowStatsTable(false)} className="lukk-btn">
               Lukk
             </button>
           </div>
@@ -632,12 +619,12 @@ export default function App() {
       <div>
         {spillere.map((spiller, idx) => (
           <div key={`stats-${spiller.id}`}>
-            <b style={{ color: spillerFarger[idx % spillerFarger.length].navn }}>
+            <b className={`statistikk-spillernavn farge${idx % spillerFarger.length}`}>
               {spiller.nummer} {spiller.navn}
             </b>
             :
             {kategoriLabels.map(kat => (
-              <span key={`kat-${spiller.id}-${kat}`} style={{ marginLeft: 12 }}>
+              <span key={`kat-${spiller.id}-${kat}`} className="statistikk-kategori">
                 {kat}:
                 {statistikk[spiller.id]?.[kat.toLowerCase()]?.join(', ') || '-'}
               </span>
