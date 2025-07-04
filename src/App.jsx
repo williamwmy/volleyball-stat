@@ -291,15 +291,28 @@ export default function App() {
         <div className="modal-bg" onClick={() => setShowSettings(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h2>Innstillinger</h2>
-            <button onClick={leggTilSpillerFraModal}>Legg til spiller</button>
-            <button onClick={slettAlleSpillere}>Slett alle spillere/statistikk</button>
-            <button onClick={resetAlleStatistikk}>Nullstill statistikk (behold spillere)</button>
-            <button onClick={() => setShowStatsTable(true)}>Vis statistikk</button>
-            <button onClick={handleSwapMode}>
+
+            {/* --- BYTT POSISJON (TOPP) --- */}
+            <h3>Bytter & Posisjoner</h3>
+            <button onClick={handleSwapMode} style={{marginBottom: 8}}>
               {swapMode ? "Avslutt bytt posisjon" : "Bytt posisjon på spillere"}
             </button>
+
+            {/* --- SPILLERADMIN --- */}
+            <h3>Spilleradministrasjon</h3>
+            <button onClick={leggTilSpillerFraModal}>Legg til spiller</button>
             <button onClick={() => setShowAdminModal(true)}>Administrer spillere</button>
-            <button onClick={() => setShowSettings(false)}>Lukk</button>
+
+            {/* --- STATISTIKK --- */}
+            <h3>Statistikk</h3>
+            <button onClick={() => setShowStatsTable(true)}>Vis statistikk</button>
+            <button onClick={resetAlleStatistikk}>Nullstill statistikk (behold spillere)</button>
+
+            {/* --- DANGEROUS --- */}
+            <h3>Andre handlinger</h3>
+            <button onClick={slettAlleSpillere} >Slett alle spillere og statistikk</button>
+
+            <button onClick={() => setShowSettings(false)} style={{marginTop:'18px'}}>Lukk</button>
           </div>
         </div>
       )}
