@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { db } from './db';
 import './App.css';
 import SpillerRute from './components/SpillerRute';
+import SpillerAdminModal from "./components/SpillerAdminModal";
+import StatistikkModal from './components/StatistikkModal';
+import SettingsModal from './components/SettingsModal';
 import { finnFørsteLedigePosisjon, kategoriLabels, spillerFarger, hentStatistikk, avg } from './utils';
 
 export default function App() {
@@ -166,41 +169,15 @@ export default function App() {
   return (
     <div className="app-main">
 
-      {/* MODAL: REDIGER SPILLERE */}
       {showAdminModal && (
-        <div className="modal-bg" onClick={() => setShowAdminModal(false)}>
-          <div className="modal admin-modal" onClick={e => e.stopPropagation()} style={{ maxHeight: '88vh', top: '4vh', overflowY: 'auto' }}>
-            <h2>Spilleradministrasjon</h2>
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Navn</th>
-                  <th>Aktiv?</th>
-                  <th>Rediger</th>
-                  <th>Slett</th>
-                </tr>
-              </thead>
-              <tbody>
-                {spillere.map(spiller => (
-                  <tr key={spiller.id} style={{ fontSize: "1em", height: "32px" }}>
-                    <td>{spiller.nummer}</td>
-                    <td>{spiller.navn}</td>
-                    <td>{spiller.active ? "Ja" : "Nei"}</td>
-                    <td>
-                      <button onClick={() => redigerSpiller(spiller)} style={{ fontSize: "1em", padding: "0.18em 0.6em" }}>Endre</button>
-                    </td>
-                    <td>
-                      <button onClick={() => slettSpiller(spiller)} style={{ fontSize: "1em", padding: "0.18em 0.6em" }}>Slett</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <button style={{ marginTop: 12 }} onClick={() => setShowAdminModal(false)}>Lukk</button>
-          </div>
-        </div>
+        <SpillerAdminModal
+          spillere={spillere}
+          onClose={() => setShowAdminModal(false)}
+          onRediger={redigerSpiller}
+          onSlett={slettSpiller}
+        />
       )}
+
 
       {/* --- ØNSKET INN BYTTEVARSEL --- */}
       {ønsketInn && (
@@ -299,124 +276,28 @@ export default function App() {
       </div>
 
       {/* --- INNSTILLINGS-MODAL --- */}
-      {showSettings && (
-        <div className="modal-bg" onClick={() => setShowSettings(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h2>Innstillinger</h2>
-            {/* --- BYTT POSISJON (TOPP) --- */}
-            <h3>Bytter & Posisjoner</h3>
-            <button onClick={handleSwapMode} style={{marginBottom: 8}}>
-              {swapMode ? "Avslutt bytt posisjon" : "Bytt posisjon på spillere"}
-            </button>
-            {/* --- SPILLERADMIN --- */}
-            <h3>Spilleradministrasjon</h3>
-            <button onClick={leggTilSpillerFraModal}>Legg til spiller</button>
-            <button onClick={() => setShowAdminModal(true)}>Administrer spillere</button>
-            {/* --- STATISTIKK --- */}
-            <h3>Statistikk</h3>
-            <button onClick={() => setShowStatsTable(true)}>Vis statistikk</button>
-            <button onClick={resetAlleStatistikk}>Nullstill statistikk (behold spillere)</button>
-            {/* --- DANGEROUS --- */}
-            <h3>Andre handlinger</h3>
-            <button onClick={slettAlleSpillere} >Slett alle spillere og statistikk</button>
-            <button onClick={() => setShowSettings(false)} style={{marginTop:'18px'}}>Lukk</button>
-          </div>
-        </div>
-      )}
+      <SettingsModal
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
+        handleSwapMode={handleSwapMode}
+        swapMode={swapMode}
+        leggTilSpillerFraModal={leggTilSpillerFraModal}
+        setShowAdminModal={setShowAdminModal}
+        setShowStatsTable={setShowStatsTable}
+        resetAlleStatistikk={resetAlleStatistikk}
+        slettAlleSpillere={slettAlleSpillere}
+      />
 
       {/* --- STATISTIKK-TABELL-MODAL --- */}
-      {showStatsTable && (
-        <div className="modal-bg" onClick={() => setShowStatsTable(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h2>Statistikk – Sett {settNr + 1}</h2>
-            <div className="stats-tab-row">
-              <button
-                className={statsTab === 0 ? "tab-btn aktiv" : "tab-btn"}
-                onClick={() => setStatsTab(0)}
-              >
-                Snitt
-              </button>
-              <button
-                className={statsTab === 1 ? "tab-btn aktiv" : "tab-btn"}
-                onClick={() => setStatsTab(1)}
-              >
-                Alle forsøk
-              </button>
-            </div>
-            {statsTab === 0 && (
-              <table className="statistikk-tabell">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Navn</th>
-                    <th>Serve</th>
-                    <th>Mottak</th>
-                    <th>Angrep</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {spillere.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="tom-tekst">
-                        Ingen spillere
-                      </td>
-                    </tr>
-                  )}
-                  {spillere.map((spiller, idx) => {
-                    const stats = statistikkPerSett[settNr]?.[spiller.id] || {};
-                    return (
-                      <tr key={spiller.id}>
-                        <td>{spiller.nummer}</td>
-                        <td>{spiller.navn}</td>
-                        <td>{avg(stats.serve)}</td>
-                        <td>{avg(stats.pass)}</td>
-                        <td>{avg(stats.attack)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
-            {statsTab === 1 && (
-              <table className="statistikk-tabell">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Navn</th>
-                    <th>Serve</th>
-                    <th>Mottak</th>
-                    <th>Angrep</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {spillere.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="tom-tekst">
-                        Ingen spillere
-                      </td>
-                    </tr>
-                  )}
-                  {spillere.map((spiller, idx) => {
-                    const stats = statistikkPerSett[settNr]?.[spiller.id] || {};
-                    return (
-                      <tr key={spiller.id}>
-                        <td>{spiller.nummer}</td>
-                        <td>{spiller.navn}</td>
-                        <td>{(stats.serve || []).join(' ') || '-'}</td>
-                        <td>{(stats.pass || []).join(' ') || '-'}</td>
-                        <td>{(stats.attack || []).join(' ') || '-'}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
-            <button onClick={() => setShowStatsTable(false)} className="lukk-btn">
-              Lukk
-            </button>
-          </div>
-        </div>
-      )}
+      <StatistikkModal
+        open={showStatsTable}
+        onClose={() => setShowStatsTable(false)}
+        statsTab={statsTab}
+        setStatsTab={setStatsTab}
+        settNr={settNr}
+        statistikkPerSett={statistikkPerSett}
+        spillere={spillere}
+      />
 
       {/* Statistikk-kompakt nederst */}
       <h2>Statistikk – Sett {settNr + 1}</h2>
