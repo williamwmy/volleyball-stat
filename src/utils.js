@@ -48,3 +48,17 @@ export function avg(arr) {
     ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2)
     : '-';
 }
+
+export function getDirection(start, end) {
+    if (!start || !end) return null;
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      if (dx > 30) return 'right';
+      if (dx < -30) return 'left';
+    } else {
+      if (dy > 30) return 'down';
+      if (dy < -30) return 'up';
+    }
+    return null;
+  }

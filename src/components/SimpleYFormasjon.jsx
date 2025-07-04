@@ -1,6 +1,8 @@
 // components/SimpleYFormasjon.jsx
 import React, { useRef, useState, useEffect } from "react";
 import DragOverlay from "./DragOverlay";
+import { getDirection } from '../utils'; // juster sti hvis utils.js ligger annet sted
+
 
 const dragScoreMap = { up: 3, right: 2, down: 1, left: 0 };
 
@@ -32,7 +34,7 @@ export default function SimpleYFormasjon({ onScore, knappFarge, navnFarge }) {
   function handleEnd(e) {
     if (!dragState) return;
     const evt = e.changedTouches ? e.changedTouches[0] : e;
-    const dir = DragOverlay.getDirection(dragState.start, { x: evt.clientX, y: evt.clientY });
+    const dir = getDirection(dragState.start, { x: evt.clientX, y: evt.clientY });
     if (dir && dragScoreMap.hasOwnProperty(dir) && dragState.kategori) {
       onScore(dragState.kategori, dragScoreMap[dir]);
     }
