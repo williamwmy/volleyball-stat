@@ -1,16 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { db } from './db';
 import './App.css';
+import SpillerRute from './components/SpillerRute';
 
-// --- KONFIG --
 const kategoriLabels = ['Serve', 'Pass', 'Attack'];
-const dragScoreMap = { up: 3, right: 2, down: 1, left: 0 };
-const dragDirections = [
-  { key: 'up', dx: 0, dy: -62, label: 3 },
-  { key: 'right', dx: 62, dy: 0, label: 2 },
-  { key: 'down', dx: 0, dy: 62, label: 1 },
-  { key: 'left', dx: -62, dy: 0, label: 0 },
-];
 const spillerFarger = [
   { navn: '#ff9500', knapp: '#fffbe5' },
   { navn: '#5fd6ff', knapp: '#e6fbff' },
@@ -21,276 +14,12 @@ const spillerFarger = [
   { navn: '#ffecb3', knapp: '#fff8e1' },
 ];
 
-// --- Finn første ledige posisjon (0–6) ---
+// Finn første ledige posisjon (0–6)
 function finnFørsteLedigePosisjon(aktive) {
   for (let i = 0; i < 7; i++) {
     if (!aktive.some(s => s.posisjon === i)) return i;
   }
   return null;
-}
-
-function getDirection(start, end) {
-  if (!start || !end) return null;
-  const dx = end.x - start.x;
-  const dy = end.y - start.y;
-  if (Math.abs(dx) > Math.abs(dy)) {
-    if (dx > 30) return 'right';
-    if (dx < -30) return 'left';
-  } else {
-    if (dy > 30) return 'down';
-    if (dy < -30) return 'up';
-  }
-  return null;
-}
-
-function DragOverlay({ visible, start, parentRect, kategori, dragPos, knappFarge, navnFarge }) {
-  if (!visible || !start) return null;
-  const svgSize = 240;
-  const center = svgSize / 2;
-
-  const top = (parentRect?.top ?? 0) + (parentRect?.height ?? 0) / 2 - center;
-  const left = (parentRect?.left ?? 0) + (parentRect?.width ?? 0) / 2 - center;
-
-  let highlight = null;
-  if (dragPos && start) {
-    highlight = getDirection(
-      { x: start.x, y: start.y },
-      { x: dragPos.x, y: dragPos.y }
-    );
-  }
-
-  let handlingNavn = '';
-  if (kategori === 'serve') handlingNavn = 'Serve';
-  else if (kategori === 'pass') handlingNavn = 'Pass';
-  else if (kategori === 'attack') handlingNavn = 'Attack';
-
-  return (
-    <div
-      className="drag-overlay"
-      style={{
-        top,
-        left,
-        width: svgSize,
-        height: svgSize,
-      }}
-    >
-      <svg width={svgSize} height={svgSize} style={{ pointerEvents: 'none' }}>
-        <g className="drag-anim">
-          {dragDirections.map((dir) => (
-            <g key={dir.key}>
-              <line
-                x1={center}
-                y1={center}
-                x2={center + dir.dx}
-                y2={center + dir.dy}
-                stroke={highlight === dir.key ? navnFarge : "#246c8e"}
-                strokeWidth={highlight === dir.key ? 9 : 6}
-                strokeLinecap="round"
-                opacity={highlight === dir.key ? 1 : 0.8}
-                style={{ transition: 'all 0.18s' }}
-              />
-              <circle
-                cx={center + dir.dx}
-                cy={center + dir.dy}
-                r="24"
-                fill={highlight === dir.key ? knappFarge : "#ffe066"}
-                stroke={highlight === dir.key ? navnFarge : "#246c8e"}
-                strokeWidth={highlight === dir.key ? 6 : 4}
-                opacity="1"
-                style={{ transition: 'all 0.18s' }}
-              />
-              <text
-                x={center + dir.dx}
-                y={center + dir.dy + 8}
-                textAnchor="middle"
-                fontSize="2rem"
-                fontWeight="bold"
-                fill="#246c8e"
-              >
-                {dir.label}
-              </text>
-            </g>
-          ))}
-          <text
-            x={center}
-            y={center + 10}
-            textAnchor="middle"
-            fontSize="1.35rem"
-            fontWeight="bold"
-            fill={navnFarge}
-            opacity="0.88"
-            style={{
-              letterSpacing: "0.08em",
-              textShadow: "0 2px 6px #fff7"
-            }}
-          >
-            {handlingNavn}
-          </text>
-        </g>
-      </svg>
-    </div>
-  );
-}
-
-function SimpleYFormasjon({ onScore, knappFarge, navnFarge }) {
-  const [dragState, setDragState] = useState(null);
-  const btnRefs = {
-    serve: useRef(null),
-    pass: useRef(null),
-    attack: useRef(null),
-  };
-
-  function handleStart(e, kategori) {
-    const evt = e.touches ? e.touches[0] : e;
-    const rect = btnRefs[kategori].current.getBoundingClientRect();
-    setDragState({
-      kategori,
-      start: { x: evt.clientX, y: evt.clientY },
-      parentRect: rect,
-      dragPos: null
-    });
-  }
-
-  function handleMove(e) {
-    if (!dragState) return;
-    const evt = e.touches ? e.touches[0] : e;
-    setDragState(ds => ds && { ...ds, dragPos: { x: evt.clientX, y: evt.clientY } });
-  }
-
-  function handleEnd(e) {
-    if (!dragState) return;
-    const evt = e.changedTouches ? e.changedTouches[0] : e;
-    const dir = getDirection(dragState.start, { x: evt.clientX, y: evt.clientY });
-    if (dir && dragScoreMap.hasOwnProperty(dir) && dragState.kategori) {
-      onScore(dragState.kategori, dragScoreMap[dir]);
-    }
-    setDragState(null);
-  }
-
-  function handleCancel() {
-    setDragState(null);
-  }
-
-  useEffect(() => {
-    if (dragState) {
-      window.addEventListener('mousemove', handleMove);
-      window.addEventListener('mouseup', handleEnd);
-      window.addEventListener('touchmove', handleMove);
-      window.addEventListener('touchend', handleEnd);
-      window.addEventListener('touchcancel', handleCancel);
-      return () => {
-        window.removeEventListener('mousemove', handleMove);
-        window.removeEventListener('mouseup', handleEnd);
-        window.removeEventListener('touchmove', handleMove);
-        window.removeEventListener('touchend', handleEnd);
-        window.removeEventListener('touchcancel', handleCancel);
-      };
-    }
-  });
-
-  return (
-    <div className="simple-y">
-      <button
-        className="simple-y-btn top"
-        ref={btnRefs.serve}
-        onMouseDown={e => handleStart(e, 'serve')}
-        onTouchStart={e => handleStart(e, 'serve')}
-        style={{
-          touchAction: 'none',
-          background: knappFarge,
-          color: '#194e62',
-          borderColor: '#ffe066',
-        }}
-      >
-        Serve
-      </button>
-      <div className="simple-y-bottom">
-        <button
-          className="simple-y-btn left"
-          ref={btnRefs.pass}
-          onMouseDown={e => handleStart(e, 'pass')}
-          onTouchStart={e => handleStart(e, 'pass')}
-          style={{
-            touchAction: 'none',
-            background: knappFarge,
-            color: '#194e62',
-            borderColor: '#ffe066',
-          }}
-        >
-          Pass
-        </button>
-        <button
-          className="simple-y-btn right"
-          ref={btnRefs.attack}
-          onMouseDown={e => handleStart(e, 'attack')}
-          onTouchStart={e => handleStart(e, 'attack')}
-          style={{
-            touchAction: 'none',
-            background: knappFarge,
-            color: '#194e62',
-            borderColor: '#ffe066',
-          }}
-        >
-          Attack
-        </button>
-      </div>
-      <DragOverlay
-        visible={!!dragState}
-        start={dragState?.start}
-        parentRect={dragState?.parentRect}
-        kategori={dragState?.kategori}
-        dragPos={dragState?.dragPos}
-        knappFarge={knappFarge}
-        navnFarge={navnFarge}
-      />
-    </div>
-  );
-}
-
-function SpillerRute({ spiller, onScore, idx, swapMode, onSwap, selectedForSwap }) {
-  const farge = spillerFarger[idx % spillerFarger.length];
-  const [feedback, setFeedback] = useState(null);
-
-  async function handleScore(kategori, score) {
-    await onScore(spiller, kategori, score);
-    setFeedback(score);
-    setTimeout(() => setFeedback(null), 600);
-  }
-
-  return (
-    <div
-      className={[
-        "spiller-rute",
-        swapMode ? "swap-mode" : "",
-        selectedForSwap ? "swap-selected" : ""
-      ].join(" ")}
-      style={{
-        '--spiller-navn-farge': farge.navn,
-        '--spiller-knapp-farge': farge.knapp
-      }}
-      onClick={swapMode ? onSwap : undefined}
-      title={swapMode ? 'Klikk for å velge spiller å bytte plass med' : undefined}
-    >
-      <div className="spiller-navn-rotated">
-        <span>{spiller.nummer} {spiller.navn}</span>
-      </div>
-      <SimpleYFormasjon
-        onScore={handleScore}
-        knappFarge={farge.knapp}
-        navnFarge={farge.navn}
-      />
-      {feedback !== null && (
-        <div className="score-feedback">
-          +{feedback}
-        </div>
-      )}
-      {swapMode && (
-        <span className={selectedForSwap ? "swap-indikator valgt" : "swap-indikator"}>
-          {selectedForSwap ? "✓" : "⇄"}
-        </span>
-      )}
-    </div>
-  );
 }
 
 export default function App() {
@@ -327,9 +56,6 @@ export default function App() {
     setStatistikk(oppsummert);
   }
 
-  // --- SPILLER AKTIVITET ---
-
-  // Legg til spiller fra modal (automatisk ledig posisjon)
   async function leggTilSpillerFraModal() {
     const navn = prompt('Navn på spiller?');
     const nummer = prompt('Draktnummer?');
@@ -346,7 +72,6 @@ export default function App() {
     setSpillere(await db.spillere.toArray());
   }
 
-  // Legg til spiller på valgt posisjon (fra pluss-knapp)
   async function leggTilSpillerPåPosisjon(posisjon) {
     const navn = prompt('Navn på spiller?');
     const nummer = prompt('Draktnummer?');
@@ -386,7 +111,6 @@ export default function App() {
     ruter.push(spiller || null);
   }
 
-  // Swap handling
   function handleSwapMode() {
     setSwapMode(!swapMode);
     setSwapFirstIdx(null);
@@ -396,7 +120,6 @@ export default function App() {
     if (swapFirstIdx === null) {
       setSwapFirstIdx(idx);
     } else if (swapFirstIdx !== idx) {
-      // Bytt posisjon
       const spiller1 = ruter[swapFirstIdx];
       const spiller2 = ruter[idx];
       const pos1 = spiller1.posisjon ?? swapFirstIdx;
@@ -409,23 +132,18 @@ export default function App() {
     }
   }
 
-  // Bytt inn spiller fra benk
   async function byttInnSpiller(benkespiller) {
     const aktive = spillere.filter(s => s.active);
     const ledigPos = finnFørsteLedigePosisjon(aktive);
     if (ledigPos !== null) {
-      // Ledig plass: bare sett aktiv og gi posisjon
       await db.spillere.update(benkespiller.id, { active: true, posisjon: ledigPos });
       setSpillere(await db.spillere.toArray());
     } else {
-      // Ikke ledig: be bruker velge hvem som skal ut
       setØnsketInn(benkespiller);
     }
   }
 
-  // Bytt ut en aktiv spiller med benkespiller
   async function byttUtOgInn(utSpiller, innSpiller) {
-    // Finn posisjon for utSpiller, og første ledige benk-posisjon for ut-spiller
     const benk = spillere.filter(s => !s.active && s.id !== innSpiller.id);
     const nyBenkPos = (benk.length > 0 ? Math.max(...benk.map(s => s.posisjon ?? 0)) + 1 : 0);
     await db.spillere.update(innSpiller.id, { active: true, posisjon: utSpiller.posisjon });
@@ -467,14 +185,12 @@ export default function App() {
             </div>
           )
         )}
-        {/* Siste rute: Innstillinger */}
         <div className="spiller-rute settings" onClick={() => setShowSettings(true)}>
           <div className="innstillinger-ikon">⚙️</div>
           <div className="innstillinger-label">Innstillinger</div>
         </div>
       </div>
 
-      {/* BENKEN */}
       <div className="benk-container">
         {spillere.filter(s => !s.active).length === 0 && (
           <div className="benk-tom">Ingen på benken</div>
