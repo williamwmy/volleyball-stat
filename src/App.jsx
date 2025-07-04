@@ -2,25 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { db } from './db';
 import './App.css';
 import SpillerRute from './components/SpillerRute';
-
-const kategoriLabels = ['Serve', 'Pass', 'Attack'];
-const spillerFarger = [
-  { navn: '#ff9500', knapp: '#fffbe5' },
-  { navn: '#5fd6ff', knapp: '#e6fbff' },
-  { navn: '#cabfff', knapp: '#f7f1ff' },
-  { navn: '#a5ffe3', knapp: '#edfff8' },
-  { navn: '#ffe066', knapp: '#fffbe5' },
-  { navn: '#d0ffc5', knapp: '#f5fff2' },
-  { navn: '#ffecb3', knapp: '#fff8e1' },
-];
-
-// Finn første ledige posisjon (0–6)
-function finnFørsteLedigePosisjon(aktive) {
-  for (let i = 0; i < 7; i++) {
-    if (!aktive.some(s => s.posisjon === i)) return i;
-  }
-  return null;
-}
+import {
+  finnFørsteLedigePosisjon,
+  hentStatistikk,
+  avg,
+  kategoriLabels,
+  spillerFarger,
+} from './utils';
 
 export default function App() {
   const [spillere, setSpillere] = useState([]);
@@ -34,26 +22,12 @@ export default function App() {
 
   useEffect(() => {
     db.spillere.toArray().then(setSpillere);
-    hentStatistikk();
+    oppdaterStatistikk();
     // eslint-disable-next-line
   }, []);
 
-  async function hentStatistikk() {
-    const stats = await db.statistikk.toArray();
-    const spillereList = await db.spillere.toArray();
-    const spillereMap = Object.fromEntries(spillereList.map(s => [s.id, s]));
-    const oppsummert = {};
-    stats.forEach(({ spillerId, type, score }) => {
-      if (!oppsummert[spillerId]) oppsummert[spillerId] = {};
-      if (!oppsummert[spillerId][type]) oppsummert[spillerId][type] = [];
-      oppsummert[spillerId][type].push(score);
-    });
-    oppsummert.__logg = stats.map(row => ({
-      ...row,
-      navn: spillereMap[row.spillerId]?.navn || "",
-      nummer: spillereMap[row.spillerId]?.nummer || "",
-    }));
-    setStatistikk(oppsummert);
+  async function oppdaterStatistikk() {
+    setStatistikk(await hentStatistikk(db));
   }
 
   async function leggTilSpillerFraModal() {
@@ -93,9 +67,9 @@ export default function App() {
       spillerId: spiller.id,
       type: kategori,
       score,
-      tidspunkt: new Date()
+      tidspunkt: new Date(),
     });
-    hentStatistikk();
+    oppdaterStatistikk();
   }
 
   // SWAP LOGIKK
@@ -271,11 +245,6 @@ export default function App() {
                   )}
                   {spillere.map((spiller, idx) => {
                     const stats = statistikk[spiller.id] || {};
-                    function avg(arr) {
-                      return arr && arr.length
-                        ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2)
-                        : '-';
-                    }
                     return (
                       <tr key={spiller.id}>
                         <td>{spiller.nummer}</td>
