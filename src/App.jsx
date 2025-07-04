@@ -5,10 +5,10 @@ import './App.css';
 const kategoriLabels = ['Serve', 'Pass', 'Attack'];
 const dragScoreMap = { up: 3, right: 2, down: 1, left: 0 };
 const dragDirections = [
-  { key: 'up', dx: 0, dy: -90, label: 3 },
-  { key: 'right', dx: 90, dy: 0, label: 2 },
-  { key: 'down', dx: 0, dy: 90, label: 1 },
-  { key: 'left', dx: -90, dy: 0, label: 0 },
+  { key: 'up', dx: 0, dy: -62, label: 3 },
+  { key: 'right', dx: 62, dy: 0, label: 2 },
+  { key: 'down', dx: 0, dy: 62, label: 1 },
+  { key: 'left', dx: -62, dy: 0, label: 0 },
 ];
 
 const spillerFarger = [
@@ -39,12 +39,12 @@ function DragOverlay({ visible, start, parentRect, kategori, dragPos, knappFarge
   if (!visible || !start) return null;
   const svgSize = 240;
   const center = svgSize / 2;
-  // For å alltid ha minst 10px marg fra skjermkanten
-  const minMargin = 10;
-  const top = Math.max((parentRect?.top ?? 0) - (svgSize / 2 - (parentRect?.height ?? 0) / 2), minMargin);
-  const left = Math.max((parentRect?.left ?? 0) - (svgSize / 2 - (parentRect?.width ?? 0) / 2), minMargin);
 
-  // Finn retning under drag hvis dragPos finnes
+  const top = (parentRect?.top ?? 0) + (parentRect?.height ?? 0) / 2 - center;
+  const left = (parentRect?.left ?? 0) + (parentRect?.width ?? 0) / 2 - center;
+
+  // BRUKER NÅ GLOBAL dragDirections, IKKE DEFINERT HER!
+
   let highlight = null;
   if (dragPos && start) {
     highlight = getDirection(
@@ -86,7 +86,7 @@ function DragOverlay({ visible, start, parentRect, kategori, dragPos, knappFarge
               <circle
                 cx={center + dir.dx}
                 cy={center + dir.dy}
-                r="28"
+                r="24"
                 fill={highlight === dir.key ? knappFarge : "#ffe066"}
                 stroke={highlight === dir.key ? navnFarge : "#246c8e"}
                 strokeWidth={highlight === dir.key ? 6 : 4}
@@ -125,6 +125,7 @@ function DragOverlay({ visible, start, parentRect, kategori, dragPos, knappFarge
     </div>
   );
 }
+
 
 function SimpleYFormasjon({ onScore, knappFarge, navnFarge }) {
   const [dragState, setDragState] = useState(null);
@@ -330,18 +331,39 @@ export default function App() {
   return (
     <div className="app-main">
       <div className="grid-container">
-        {ruter.map((spiller, idx) =>
-          spiller ? (
-            <SpillerRute
-              key={`spiller-${spiller.id}-${idx}`}
-              spiller={spiller}
-              onScore={onScore}
-              idx={idx}
-            />
-          ) : (
-            <div className="spiller-rute tom" key={`tom-${idx}`}></div>
-          )
-        )}
+      {ruter.map((spiller, idx) =>
+        spiller ? (
+          <SpillerRute
+            key={`spiller-${spiller.id}-${idx}`}
+            spiller={spiller}
+            onScore={onScore}
+            idx={idx}
+          />
+        ) : (
+          <div
+            className="spiller-rute tom"
+            key={`tom-${idx}`}
+            onClick={leggTilSpiller}
+            style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}
+            title="Legg til spiller"
+          >
+            <span
+              style={{
+                fontSize: "3.1rem",
+                color: "#b5b5b5",
+                fontWeight: 500,
+                userSelect: "none",
+                position: "absolute",
+                top: "48%",
+                left: "50%",
+                transform: "translate(-50%, -52%)",
+                pointerEvents: "none"
+              }}
+              aria-label="Pluss ikon"
+            >+</span>
+          </div>
+        )
+      )}
         <div className="spiller-rute settings" onClick={() => setShowSettings(true)}>
           <div style={{ fontSize: 48, textAlign: 'center' }}>⚙️</div>
           <div style={{ textAlign: 'center', marginTop: 8 }}>Innstillinger</div>

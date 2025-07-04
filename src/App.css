@@ -8,7 +8,7 @@ body {
   max-width: 100vw;
   width: 100vw;
   margin: 0;
-  padding: 0.15rem 0.01rem 0.4rem 0.01rem;
+  padding: 0.15rem 24px 0.4rem 24px;
   box-sizing: border-box;
   font-family: sans-serif;
   background: none;
@@ -22,9 +22,9 @@ body {
   grid-template-rows: repeat(4, 1fr);
   gap: 0.9rem;
   margin: 0.6rem 0 1.6rem 0;
-  width: 100vw;
+  width: 100%;
   max-width: 100vw;
-  padding: 0 0.5vw;
+  padding: 0;
   box-sizing: border-box;
 }
 
@@ -131,8 +131,10 @@ body {
   width: 100%;
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
-  gap: 16px;
+  justify-content: center;     
+  gap: 24px;                   
+  margin-left: 8px;            
+  margin-right: 8px;
 }
 
 /* ----------- Drag overlay ----------- */
@@ -153,8 +155,7 @@ body {
   to {
     opacity: 1;
     transform: scale(1);
-  }
-}
+}}
 
 /* ----------- Feedback (score pop) ----------- */
 .score-feedback {
@@ -229,15 +230,13 @@ h2 {
 /* --------- Mobilvennlig --------- */
 @media (max-width: 540px) {
   .app-main {
-    padding: 0.1rem 0.01rem;
-    max-width: 100vw;
-    border-radius: 0;
+    padding: 0.1rem 8px 0.7rem 8px;
   }
   .grid-container {
     gap: 0.3rem;
     margin: 0.6rem 0 0.8rem 0;
-    padding: 0 0.2vw;
   }
+}
   .spiller-rute,
   .spiller-rute.tom {
     min-width: 0;
@@ -246,6 +245,11 @@ h2 {
     padding: 0.28rem 0.13rem 0.1rem 0.13rem;
     padding-left: 7px;
     padding-right: 7px;
+  }
+  .spiller-rute.tom:hover {
+    background: #d9e3ed;
+    box-shadow: 0 0 0 2px #ffe06677;
+    transition: background 0.15s, box-shadow 0.15s;
   }
   .simple-y-btn {
     width: 56px;
@@ -256,4 +260,5 @@ h2 {
     max-height: 56px;
     font-size: 1rem;
   }
+
 }
