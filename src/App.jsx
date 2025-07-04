@@ -11,15 +11,14 @@ const dragDirections = [
   { key: 'left', dx: -90, dy: 0, label: 0 },
 ];
 
-// Fargepalett: navn = tekstfarge, knapp = knappbakgrunn
 const spillerFarger = [
-  { navn: '#ff9500', knapp: '#fffbe5' }, // Oransje + lys gul
-  { navn: '#5fd6ff', knapp: '#e6fbff' }, // Turkis + lys turkis
-  { navn: '#cabfff', knapp: '#f7f1ff' }, // Lilla + lys lilla
-  { navn: '#a5ffe3', knapp: '#edfff8' }, // Mint + lys mint
-  { navn: '#ffe066', knapp: '#fffbe5' }, // Gul + lys gul
-  { navn: '#d0ffc5', knapp: '#f5fff2' }, // Grønn + lys grønn
-  { navn: '#ffecb3', knapp: '#fff8e1' }, // Lys oransje + offwhite
+  { navn: '#ff9500', knapp: '#fffbe5' },
+  { navn: '#5fd6ff', knapp: '#e6fbff' },
+  { navn: '#cabfff', knapp: '#f7f1ff' },
+  { navn: '#a5ffe3', knapp: '#edfff8' },
+  { navn: '#ffe066', knapp: '#fffbe5' },
+  { navn: '#d0ffc5', knapp: '#f5fff2' },
+  { navn: '#ffecb3', knapp: '#fff8e1' },
 ];
 
 function getDirection(start, end) {
@@ -40,6 +39,10 @@ function DragOverlay({ visible, start, parentRect, kategori, dragPos, knappFarge
   if (!visible || !start) return null;
   const svgSize = 240;
   const center = svgSize / 2;
+  // For å alltid ha minst 10px marg fra skjermkanten
+  const minMargin = 10;
+  const top = Math.max((parentRect?.top ?? 0) - (svgSize / 2 - (parentRect?.height ?? 0) / 2), minMargin);
+  const left = Math.max((parentRect?.left ?? 0) - (svgSize / 2 - (parentRect?.width ?? 0) / 2), minMargin);
 
   // Finn retning under drag hvis dragPos finnes
   let highlight = null;
@@ -50,7 +53,6 @@ function DragOverlay({ visible, start, parentRect, kategori, dragPos, knappFarge
     );
   }
 
-  // Midt-label for handling
   let handlingNavn = '';
   if (kategori === 'serve') handlingNavn = 'Serve';
   else if (kategori === 'pass') handlingNavn = 'Pass';
@@ -60,19 +62,16 @@ function DragOverlay({ visible, start, parentRect, kategori, dragPos, knappFarge
     <div
       className="drag-overlay"
       style={{
-        top: (parentRect?.top ?? 0) - (svgSize / 2 - (parentRect?.height ?? 0) / 2),
-        left: (parentRect?.left ?? 0) - (svgSize / 2 - (parentRect?.width ?? 0) / 2),
+        top,
+        left,
         width: svgSize,
         height: svgSize,
       }}
     >
       <svg width={svgSize} height={svgSize} style={{ pointerEvents: 'none' }}>
-        {/* Animasjon (fade/scale) */}
         <g className="drag-anim">
-          {/* Sirkler/streker */}
           {dragDirections.map((dir) => (
             <g key={dir.key}>
-              {/* Linje */}
               <line
                 x1={center}
                 y1={center}
@@ -84,7 +83,6 @@ function DragOverlay({ visible, start, parentRect, kategori, dragPos, knappFarge
                 opacity={highlight === dir.key ? 1 : 0.8}
                 style={{ transition: 'all 0.18s' }}
               />
-              {/* Sirkel */}
               <circle
                 cx={center + dir.dx}
                 cy={center + dir.dy}
@@ -95,7 +93,6 @@ function DragOverlay({ visible, start, parentRect, kategori, dragPos, knappFarge
                 opacity="1"
                 style={{ transition: 'all 0.18s' }}
               />
-              {/* Tall */}
               <text
                 x={center + dir.dx}
                 y={center + dir.dy + 8}
@@ -108,7 +105,6 @@ function DragOverlay({ visible, start, parentRect, kategori, dragPos, knappFarge
               </text>
             </g>
           ))}
-          {/* Handling-label i midten */}
           <text
             x={center}
             y={center + 10}
@@ -131,7 +127,6 @@ function DragOverlay({ visible, start, parentRect, kategori, dragPos, knappFarge
 }
 
 function SimpleYFormasjon({ onScore, knappFarge, navnFarge }) {
-  // Drag state
   const [dragState, setDragState] = useState(null);
   const btnRefs = {
     serve: useRef(null),
@@ -247,7 +242,6 @@ function SimpleYFormasjon({ onScore, knappFarge, navnFarge }) {
 }
 
 function SpillerRute({ spiller, onScore, idx }) {
-  // Farger for denne spilleren
   const farge = spillerFarger[idx % spillerFarger.length];
   const [feedback, setFeedback] = useState(null);
 
@@ -290,12 +284,10 @@ export default function App() {
   useEffect(() => {
     db.spillere.toArray().then(setSpillere);
     hentStatistikk();
-    // eslint-disable-next-line
   }, []);
 
   async function hentStatistikk() {
     const stats = await db.statistikk.toArray();
-    // Oppsummer per spiller og kategori
     const oppsummert = {};
     stats.forEach(({ spillerId, type, score }) => {
       if (!oppsummert[spillerId]) oppsummert[spillerId] = {};
@@ -350,7 +342,6 @@ export default function App() {
             <div className="spiller-rute tom" key={`tom-${idx}`}></div>
           )
         )}
-        {/* Siste rute: Innstillinger */}
         <div className="spiller-rute settings" onClick={() => setShowSettings(true)}>
           <div style={{ fontSize: 48, textAlign: 'center' }}>⚙️</div>
           <div style={{ textAlign: 'center', marginTop: 8 }}>Innstillinger</div>
