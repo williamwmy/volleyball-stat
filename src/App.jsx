@@ -437,18 +437,9 @@ export default function App() {
   return (
     <div className="app-main">
       {ønsketInn && (
-        <div style={{
-          color: '#ff9500',
-          background: '#fffbe5',
-          padding: '0.7em 1.3em',
-          marginBottom: 10,
-          borderRadius: 13,
-          fontWeight: 600,
-          fontSize: '1.05em',
-          textAlign: 'center'
-        }}>
+        <div className="onsket-inn-varsel">
           Klikk på spilleren du vil bytte ut for å sette inn <b>{ønsketInn.navn}</b>!
-          <button style={{ marginLeft: 12, fontWeight: 400 }} onClick={() => setØnsketInn(null)}>Avbryt</button>
+          <button onClick={() => setØnsketInn(null)}>Avbryt</button>
         </div>
       )}
       <div className="grid-container">
@@ -480,20 +471,7 @@ export default function App() {
               }}
               title="Legg til spiller"
             >
-              <span
-                style={{
-                  fontSize: "3.1rem",
-                  color: "#b5b5b5",
-                  fontWeight: 500,
-                  userSelect: "none",
-                  position: "absolute",
-                  top: "48%",
-                  left: "50%",
-                  transform: "translate(-50%, -52%)",
-                  pointerEvents: "none"
-                }}
-                aria-label="Pluss ikon"
-              >+</span>
+              <span className="pluss-ikon" aria-label="Pluss ikon">+</span>
             </div>
           )
         )}

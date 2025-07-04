@@ -334,3 +334,26 @@ h2 {
     background: #ffecb3;
   }
 }
+
+.onsket-inn-varsel {
+  color: #ff9500;
+  background: #fffbe5;
+  padding: 0.7em 1.3em;
+  margin-bottom: 10px;
+  border-radius: 13px;
+  font-weight: 600;
+  font-size: 1.05em;
+  text-align: center;
+}
+
+.pluss-ikon {
+  font-size: 3.1rem;
+  color: #b5b5b5;
+  font-weight: 500;
+  user-select: none;
+  position: absolute;
+  top: 48%;
+  left: 50%;
+  transform: translate(-50%, -52%);
+  pointer-events: none;
+}
